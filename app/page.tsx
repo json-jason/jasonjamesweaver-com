@@ -100,7 +100,7 @@ export default function Home() {
                 className={`group relative flex items-center py-2 text-xs uppercase tracking-[0.18em] transition-colors duration-200 ${
                   idx === 0
                     ? "text-amber-400/90"
-                    : "text-gray-500 hover:text-gray-300"
+                    : "text-gray-400 hover:text-gray-200"
                 }`}
               >
                 {idx === 0 && (
@@ -124,10 +124,10 @@ export default function Home() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-2.5 group cursor-pointer no-underline"
               >
-                <span className="w-5 h-5 flex items-center justify-center border border-white/10 rounded-[3px] text-[8px] font-medium text-gray-500 group-hover:border-white/30 group-hover:text-white transition-all duration-200">
+                <span className="w-5 h-5 flex items-center justify-center border border-white/20 rounded-[3px] text-[8px] font-medium text-gray-400 group-hover:border-white/40 group-hover:text-white transition-all duration-200">
                   {s.short}
                 </span>
-                <span className="text-[11px] uppercase tracking-[0.1em] text-gray-500 group-hover:text-white transition-colors duration-200">
+                <span className="text-[11px] uppercase tracking-[0.1em] text-gray-400 group-hover:text-white transition-colors duration-200">
                   {s.label}
                 </span>
               </a>
@@ -165,9 +165,9 @@ export default function Home() {
                     href={s.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 py-1 text-xs text-gray-500 hover:text-white transition-colors"
+                    className="flex items-center gap-2 py-1 text-xs text-gray-400 hover:text-white transition-colors"
                   >
-                    <span className="w-5 h-5 flex items-center justify-center border border-white/10 rounded-[2px] text-[8px]">
+                    <span className="w-5 h-5 flex items-center justify-center border border-white/20 rounded-[2px] text-[8px]">
                       {s.short}
                     </span>
                     {s.label}
@@ -195,37 +195,51 @@ export default function Home() {
             className="object-cover"
             sizes="(max-width: 768px) 100vw, calc(100vw - 240px)"
           />
-          {/* Stronger dark gradient on left, natural fade on right */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/65 via-40% to-transparent to-75%" />
+          {/* Rich left-side gradient — darker for text legibility, natural right side */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/75 via-35% to-transparent to-75%" />
 
           {/* Hero text — shifted leftward and lower */}
           <div className="absolute inset-0 flex items-end pb-16 md:pb-24 lg:pb-32">
             <div className="pl-6 pr-12 md:pl-10 md:pr-16 lg:pl-14 lg:pr-20 w-full max-w-lg">
-              <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-none tracking-tight">
+              {/* Name — condensed editorial typeface */}
+              <h1
+                className="hero-name text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[0.85] tracking-[-0.01em] text-white"
+              >
                 <span className="block">JASON</span>
-                <span className="block mt-0.5">WEAVER</span>
+                <span className="block">WEAVER</span>
               </h1>
-              <p className="text-base md:text-lg text-gray-300 mt-6 font-light tracking-wide">
+
+              {/* Subtitle — light blue */}
+              <p className="text-base md:text-lg text-[#8ec5ff] mt-6 font-light tracking-[0.06em] uppercase">
                 Technology Leader
               </p>
-              <p className="text-xs md:text-sm text-gray-500 mt-1.5 tracking-[0.08em] uppercase">
-                AI Explorer · Builder of Systems
+
+              {/* Subtitle — muted blue-gray */}
+              <p className="text-xs md:text-sm text-[#9fb4c7] mt-2 tracking-[0.12em] uppercase">
+                AI Explorer &middot; Builder of Systems
               </p>
-              <p className="text-sm md:text-base text-gray-400 mt-5 max-w-lg leading-relaxed">
+
+              {/* Gold divider line */}
+              <div className="w-14 h-[2px] bg-[#d6a638] my-7" />
+
+              {/* Body copy — off-white for readability */}
+              <p className="text-sm md:text-base text-[#e5e7eb] leading-[1.75] max-w-md">
                 20+ years leading global platform operations, cloud platforms,
                 and high-performing teams at scale. Exploring the power of AI
                 and automation to build better systems for work and life.
               </p>
+
+              {/* Buttons */}
               <div className="flex flex-wrap gap-4 mt-8">
                 <Link
                   href="#projects"
-                  className="inline-flex items-center bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-7 py-3 rounded-md transition-colors duration-200"
+                  className="inline-flex items-center border border-[#d6a638] text-[#d6a638] bg-transparent hover:bg-[rgba(214,166,56,0.12)] text-sm font-medium px-7 py-3 rounded-md transition-all duration-200"
                 >
                   View My Work
                 </Link>
                 <Link
                   href="#contact"
-                  className="inline-flex items-center border border-white/20 hover:border-white/60 text-white text-sm font-medium px-7 py-3 rounded-md transition-colors duration-200"
+                  className="inline-flex items-center border border-[rgba(142,197,255,0.35)] bg-[rgba(60,110,160,0.35)] hover:bg-[rgba(80,130,190,0.45)] text-[#f8fafc] text-sm font-medium px-7 py-3 rounded-md transition-all duration-200"
                 >
                   Contact Me
                 </Link>
