@@ -30,3 +30,8 @@ a {
 button {
   font: inherit;
 }
+
+/* Remove default details marker on mobile menu */
+summary::-webkit-details-marker {
+  display: none;
+}
