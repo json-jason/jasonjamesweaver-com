@@ -35,3 +35,9 @@ button {
 summary::-webkit-details-marker {
   display: none;
 }
+
+/* Hero name — tall condensed editorial font stack */
+.hero-name {
+  font-family: Impact, "Arial Narrow", "Helvetica Neue Condensed",
+    "Franklin Gothic Medium", "Stencil Gothic", sans-serif;
+}
