@@ -1,219 +1,360 @@
-import Image from 'next/image';
-import Link from 'next/link';
+import Image from "next/image";
+import Link from "next/link";
 
-/**
- * Draft implementation for the Jason Weaver homepage (version 0.1).
- *
- * This file demonstrates how to structure the landing page using the Next.js
- * App Router and Tailwind CSS. It adheres to the dark, minimalist aesthetic
- * described in the project brief while remaining relatively simple and
- * self‑contained. All sections live within one component to avoid adding
- * unnecessary dependencies or complexity at this early stage.
- */
+/* ── Navigation & Social data ──────────────────────────── */
+
+const NAV_ITEMS = [
+  { label: "Home", href: "#home" },
+  { label: "About", href: "#about" },
+  { label: "Career", href: "#career" },
+  { label: "Projects", href: "#projects" },
+  { label: "Resources", href: "#resources" },
+  { label: "Notes", href: "#notes" },
+  { label: "Contact", href: "#contact" },
+];
+
+const SOCIALS = [
+  { label: "X", href: "https://x.com/jasonjweaver", short: "X" },
+  {
+    label: "LinkedIn",
+    href: "https://www.linkedin.com/in/jasonjweaver",
+    short: "in",
+  },
+  { label: "GitHub", href: "https://github.com/json-jason", short: "GH" },
+  {
+    label: "YouTube",
+    href: "https://www.youtube.com/@jasonjweaver",
+    short: "YT",
+  },
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/jasonjweaver",
+    short: "IG",
+  },
+  { label: "Email", href: "mailto:hello@jasonjweaver.com", short: "@" },
+];
+
+/* ── Sub-component: Card used across sections ──────────── */
+
+function Card({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="group bg-white/[0.03] border border-white/[0.06] rounded-lg p-6 hover:bg-white/[0.06] hover:border-white/10 transition-all duration-200">
+      <h4 className="text-base font-semibold text-white mb-2">{title}</h4>
+      <p className="text-sm text-gray-500 leading-relaxed">{description}</p>
+    </div>
+  );
+}
+
+/* ── Section heading helper ────────────────────────────── */
+
+function SectionHeading({
+  tag,
+  accent,
+  title,
+}: {
+  tag: string;
+  accent: "amber" | "blue";
+  title: string;
+}) {
+  const accentClass =
+    accent === "amber" ? "text-amber-400/70" : "text-blue-400/70";
+  return (
+    <>
+      <h2 className={`text-xs uppercase tracking-[0.2em] ${accentClass} mb-3`}>
+        {tag}
+      </h2>
+      <h3 className="text-3xl md:text-4xl font-bold mb-12">{title}</h3>
+    </>
+  );
+}
+
+/* ── Page ──────────────────────────────────────────────── */
+
 export default function Home() {
   return (
-    <main className="flex flex-col md:flex-row min-h-screen bg-black text-white">
-      {/* Sidebar */}
-      <aside className="md:w-64 w-full p-6 flex flex-col justify-between bg-neutral-900">
-        <div>
-          <h1 className="text-3xl font-bold mb-8">Jason&nbsp;Weaver</h1>
-          <nav className="flex flex-col space-y-4 font-medium">
-            <Link href="#" className="hover:text-blue-500">Home</Link>
-            <Link href="#about" className="hover:text-blue-500">About</Link>
-            <Link href="#career" className="hover:text-blue-500">Career</Link>
-            <Link href="#projects" className="hover:text-blue-500">Projects</Link>
-            <Link href="#resources" className="hover:text-blue-500">Resources</Link>
-            <Link href="#notes" className="hover:text-blue-500">Notes</Link>
-            <Link href="#contact" className="hover:text-blue-500">Contact</Link>
+    <div className="min-h-screen bg-black text-white">
+      {/* ================================================================
+          DESKTOP SIDEBAR
+          ================================================================ */}
+      <aside className="hidden md:flex fixed left-0 top-0 w-60 h-screen bg-black z-50 flex-col border-r border-white/[0.04]">
+        <div className="flex flex-col h-full p-8">
+          {/* Wordmark — clean single line */}
+          <Link href="/" className="block mb-14">
+            <span className="text-lg font-bold tracking-tight text-white">
+              Jason Weaver
+            </span>
+          </Link>
+
+          {/* Navigation */}
+          <nav className="flex flex-col space-y-0.5">
+            {NAV_ITEMS.map((item, idx) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`group relative flex items-center py-2 text-xs uppercase tracking-[0.18em] transition-colors duration-200 ${
+                  idx === 0
+                    ? "text-amber-400/90"
+                    : "text-gray-500 hover:text-gray-300"
+                }`}
+              >
+                {idx === 0 && (
+                  <span className="absolute -left-8 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-amber-400 rounded-full" />
+                )}
+                {item.label}
+              </Link>
+            ))}
           </nav>
-        </div>
-        <div className="mt-12">
-          <ul className="flex flex-col space-y-2 text-sm">
-            <li>
+
+          {/* Spacer pushes socials to bottom */}
+          <div className="flex-1 min-h-8" />
+
+          {/* Social links — tighter spacing */}
+          <div className="space-y-1.5 pb-1">
+            {SOCIALS.map((s) => (
               <a
-                href="https://www.linkedin.com/in/jasonjweaver"
+                key={s.href}
+                href={s.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-blue-500"
+                className="flex items-center gap-2.5 group cursor-pointer no-underline"
               >
-                LinkedIn
+                <span className="w-5 h-5 flex items-center justify-center border border-white/10 rounded-[3px] text-[8px] font-medium text-gray-500 group-hover:border-white/30 group-hover:text-white transition-all duration-200">
+                  {s.short}
+                </span>
+                <span className="text-[11px] uppercase tracking-[0.1em] text-gray-500 group-hover:text-white transition-colors duration-200">
+                  {s.label}
+                </span>
               </a>
-            </li>
-            <li>
-              <a
-                href="https://github.com/json-jason"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-blue-500"
-              >
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://x.com/jasonjweaver"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-blue-500"
-              >
-                X
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://www.youtube.com/@jasonjweaver"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-blue-500"
-              >
-                YouTube
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://www.instagram.com/jasonjweaver"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-blue-500"
-              >
-                Instagram
-              </a>
-            </li>
-            <li>
-              <a
-                href="mailto:hello@jasonjamesweaver.com"
-                className="hover:text-blue-500"
-              >
-                Email
-              </a>
-            </li>
-          </ul>
+            ))}
+          </div>
         </div>
       </aside>
-      {/* Main content */}
-      <div className="flex-1 p-8 overflow-y-auto">
-        {/* Hero section */}
-        <section className="flex flex-col lg:flex-row items-center gap-8 min-h-screen" id="home">
-          <div className="lg:w-1/2 flex flex-col justify-center">
-            <h2 className="text-6xl lg:text-7xl font-bold leading-tight">
-              Jason<br />
-              Weaver
-            </h2>
-            <p className="text-xl text-gray-400 mt-4">
-              Technology&nbsp;Leader
-              <br />
-              AI&nbsp;Explorer&nbsp;•&nbsp;Builder&nbsp;of&nbsp;Systems
-            </p>
-            <p className="text-gray-300 mt-6 max-w-md">
-              20+&nbsp;years leading global platform operations, cloud
-              platforms and high‑performing teams at scale. Exploring the
-              power of AI and automation to build better systems for work
-              and life.
-            </p>
-            <div className="mt-8 flex space-x-4">
-              <Link
-                href="#projects"
-                className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
-              >
-                View&nbsp;My&nbsp;Work
-              </Link>
-              <Link
-                href="#contact"
-                className="border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-black py-2 px-4 rounded"
-              >
-                Contact&nbsp;Me
-              </Link>
+
+      {/* ================================================================
+          MOBILE HEADER
+          ================================================================ */}
+      <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-sm border-b border-white/5">
+        <div className="flex items-center justify-between px-6 py-4">
+          <Link href="/" className="text-lg font-bold tracking-tight">
+            Jason Weaver
+          </Link>
+          <details className="group relative">
+            <summary className="list-none cursor-pointer text-xs uppercase tracking-wider text-gray-400 hover:text-white select-none">
+              Menu
+            </summary>
+            <nav className="absolute right-0 top-full mt-2 w-52 bg-black/95 backdrop-blur-sm border border-white/[0.08] rounded-md p-4 space-y-2 shadow-xl">
+              {NAV_ITEMS.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="block py-1.5 text-sm text-gray-400 hover:text-amber-400 transition-colors"
+                >
+                  {item.label}
+                </Link>
+              ))}
+              <div className="pt-3 mt-3 border-t border-white/10 space-y-1.5">
+                {SOCIALS.map((s) => (
+                  <a
+                    key={s.href}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 py-1 text-xs text-gray-500 hover:text-white transition-colors"
+                  >
+                    <span className="w-5 h-5 flex items-center justify-center border border-white/10 rounded-[2px] text-[8px]">
+                      {s.short}
+                    </span>
+                    {s.label}
+                  </a>
+                ))}
+              </div>
+            </nav>
+          </details>
+        </div>
+      </header>
+
+      {/* ================================================================
+          MAIN CONTENT (offset for sidebar on desktop)
+          ================================================================ */}
+      <div className="md:ml-60">
+        {/* ================================================================
+            HERO SECTION — full-screen image with overlay text
+            ================================================================ */}
+        <section id="home" className="relative h-dvh w-full overflow-hidden">
+          <Image
+            src="/images/jason-hero.jpeg"
+            alt="Jason Weaver on the beach"
+            fill
+            priority
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, calc(100vw - 240px)"
+          />
+          {/* Stronger dark gradient on left, natural fade on right */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/65 via-40% to-transparent to-75%" />
+
+          {/* Hero text — shifted leftward and lower */}
+          <div className="absolute inset-0 flex items-end pb-16 md:pb-24 lg:pb-32">
+            <div className="pl-6 pr-12 md:pl-10 md:pr-16 lg:pl-14 lg:pr-20 w-full max-w-lg">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-none tracking-tight">
+                <span className="block">JASON</span>
+                <span className="block mt-0.5">WEAVER</span>
+              </h1>
+              <p className="text-base md:text-lg text-gray-300 mt-6 font-light tracking-wide">
+                Technology Leader
+              </p>
+              <p className="text-xs md:text-sm text-gray-500 mt-1.5 tracking-[0.08em] uppercase">
+                AI Explorer · Builder of Systems
+              </p>
+              <p className="text-sm md:text-base text-gray-400 mt-5 max-w-lg leading-relaxed">
+                20+ years leading global platform operations, cloud platforms,
+                and high-performing teams at scale. Exploring the power of AI
+                and automation to build better systems for work and life.
+              </p>
+              <div className="flex flex-wrap gap-4 mt-8">
+                <Link
+                  href="#projects"
+                  className="inline-flex items-center bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-7 py-3 rounded-md transition-colors duration-200"
+                >
+                  View My Work
+                </Link>
+                <Link
+                  href="#contact"
+                  className="inline-flex items-center border border-white/20 hover:border-white/60 text-white text-sm font-medium px-7 py-3 rounded-md transition-colors duration-200"
+                >
+                  Contact Me
+                </Link>
+              </div>
             </div>
           </div>
-          <div className="lg:w-1/2 relative h-80 lg:h-[70vh] w-full">
-            <Image
-              src="/images/jason-hero.jpeg"
-              alt="Jason Weaver hero"
-              fill
-              priority
-              className="object-cover rounded-lg"
+        </section>
+
+        {/* ================================================================
+            CURRENT FOCUS
+            ================================================================ */}
+        <section id="about" className="py-20 md:py-28 px-8 md:px-16 lg:px-20">
+          <SectionHeading tag="Focus" accent="amber" title="Current Focus" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <Card
+              title="AI & Automation"
+              description="Building and learning with AI agents, tools and systems."
+            />
+            <Card
+              title="Career Evolution"
+              description="Finding my next leadership role where I can make the biggest impact."
+            />
+            <Card
+              title="Health & Longevity"
+              description="Training, nutrition, recovery and performance."
+            />
+            <Card
+              title="Adventure"
+              description="Mountains, trails, endurance and exploration."
+            />
+            <Card
+              title="Lifelong Learning"
+              description="Books, ideas and curiosity fueling everything I do."
             />
           </div>
         </section>
 
-        {/* Current focus section */}
-        <section id="focus" className="py-16">
-          <h3 className="text-3xl font-bold mb-8">Current Focus</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-neutral-800 p-6 rounded">
-              <h4 className="text-xl font-semibold mb-2">AI&nbsp;&amp;&nbsp;Automation</h4>
-              <p className="text-gray-400">Building and learning with AI agents, tools and systems.</p>
-            </div>
-            <div className="bg-neutral-800 p-6 rounded">
-              <h4 className="text-xl font-semibold mb-2">Career&nbsp;Evolution</h4>
-              <p className="text-gray-400">Finding my next leadership role where I can make the biggest impact.</p>
-            </div>
-            <div className="bg-neutral-800 p-6 rounded">
-              <h4 className="text-xl font-semibold mb-2">Health&nbsp;&amp;&nbsp;Longevity</h4>
-              <p className="text-gray-400">Training, nutrition, recovery and performance.</p>
-            </div>
-            <div className="bg-neutral-800 p-6 rounded">
-              <h4 className="text-xl font-semibold mb-2">Adventure</h4>
-              <p className="text-gray-400">Mountains, trails, endurance and exploration.</p>
-            </div>
-            <div className="bg-neutral-800 p-6 rounded">
-              <h4 className="text-xl font-semibold mb-2">Lifelong&nbsp;Learning</h4>
-              <p className="text-gray-400">Books, ideas and curiosity fueling everything I do.</p>
-            </div>
+        {/* ================================================================
+            FEATURED PROJECTS
+            ================================================================ */}
+        <section
+          id="projects"
+          className="py-20 md:py-28 px-8 md:px-16 lg:px-20 bg-white/[0.01] border-y border-white/[0.03]"
+        >
+          <SectionHeading
+            tag="Work"
+            accent="blue"
+            title="Featured Projects"
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <Card
+              title="AI Coach (Claude Skill)"
+              description="A personal AI coaching assistant built as a Claude skill, focused on clarity, accountability and better thinking."
+            />
+            <Card
+              title="Comments Clinic GPT"
+              description="A custom GPT built to help creators and businesses turn rough ideas into sharper comments, feedback and engagement."
+            />
           </div>
         </section>
 
-        {/* Featured projects section */}
-        <section id="projects" className="py-16">
-          <h3 className="text-3xl font-bold mb-8">Featured Projects</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-neutral-800 p-6 rounded">
-              <h4 className="text-xl font-semibold mb-2">AI&nbsp;Coach&nbsp;(Claude&nbsp;Skill)</h4>
-              <p className="text-gray-400">A personal AI coaching assistant built as a Claude skill, focused on clarity, accountability and better thinking.</p>
-            </div>
-            <div className="bg-neutral-800 p-6 rounded">
-              <h4 className="text-xl font-semibold mb-2">Comments&nbsp;Clinic&nbsp;GPT</h4>
-              <p className="text-gray-400">A custom GPT built to help creators and businesses turn rough ideas into sharper comments, feedback and engagement.</p>
-            </div>
+        {/* ================================================================
+            RESOURCES I RECOMMEND
+            ================================================================ */}
+        <section
+          id="resources"
+          className="py-20 md:py-28 px-8 md:px-16 lg:px-20"
+        >
+          <SectionHeading
+            tag="Recommendations"
+            accent="amber"
+            title="Resources I Recommend"
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <Card
+              title="Books"
+              description="Curated reading list to broaden perspectives."
+            />
+            <Card
+              title="Tools"
+              description="Software and frameworks that accelerate innovation."
+            />
+            <Card
+              title="People"
+              description="Thought leaders and mentors who inspire."
+            />
+            <Card
+              title="Media"
+              description="Articles, podcasts and videos worth exploring."
+            />
           </div>
         </section>
 
-        {/* Resources section */}
-        <section id="resources" className="py-16">
-          <h3 className="text-3xl font-bold mb-8">Resources I Recommend</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-neutral-800 p-6 rounded">
-              <h4 className="text-xl font-semibold mb-2">Books</h4>
-              <p className="text-gray-400">Curated reading list to broaden perspectives.</p>
+        {/* ================================================================
+            CONTACT / FOOTER
+            ================================================================ */}
+        <footer
+          id="contact"
+          className="py-20 px-8 md:px-16 lg:px-20 border-t border-white/[0.04]"
+        >
+          <div className="max-w-xl mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Let&rsquo;s Connect
+            </h2>
+            <p className="text-gray-500 mb-8 leading-relaxed">
+              Building systems. Empowering people. Creating impact that lasts.
+            </p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <a
+                href="mailto:hello@jasonjamesweaver.com"
+                className="inline-flex items-center bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-6 py-3 rounded-md transition-colors duration-200"
+              >
+                Get in Touch
+              </a>
+              <a
+                href="https://www.linkedin.com/in/jasonjweaver"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center border border-white/20 hover:border-white/60 text-white text-sm font-medium px-6 py-3 rounded-md transition-colors duration-200"
+              >
+                LinkedIn
+              </a>
             </div>
-            <div className="bg-neutral-800 p-6 rounded">
-              <h4 className="text-xl font-semibold mb-2">Tools</h4>
-              <p className="text-gray-400">Software and frameworks that accelerate innovation.</p>
-            </div>
-            <div className="bg-neutral-800 p-6 rounded">
-              <h4 className="text-xl font-semibold mb-2">People</h4>
-              <p className="text-gray-400">Thought leaders and mentors who inspire.</p>
-            </div>
-            <div className="bg-neutral-800 p-6 rounded">
-              <h4 className="text-xl font-semibold mb-2">Media</h4>
-              <p className="text-gray-400">Articles, podcasts and videos worth exploring.</p>
-            </div>
+            <p className="text-xs text-gray-600 mt-12">
+              &copy; 2026 Jason Weaver
+            </p>
           </div>
-        </section>
-
-        {/* Footer / Contact section */}
-        <footer id="contact" className="py-12 border-t border-neutral-800 text-center">
-          <p className="text-gray-400 mb-4">
-            Building systems. Empowering people. Creating impact that lasts.
-          </p>
-          <a
-            href="mailto:hello@jasonjamesweaver.com"
-            className="text-blue-600 hover:underline"
-          >
-            Get&nbsp;in&nbsp;touch
-          </a>
         </footer>
       </div>
-    </main>
+    </div>
   );
 }
