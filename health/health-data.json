@@ -1,0 +1,309 @@
+{
+  "profile": {
+    "name": "Jason Weaver",
+    "dob": "1978-12-09",
+    "age": 47,
+    "height": "6'1\" (185 cm)",
+    "weight": "180 lbs (81.6 kg)",
+    "bodyFat": "~18%",
+    "restingHR": 59,
+    "vo2Max": 52.2,
+    "bloodPressure": "106-108 / 70",
+    "address": "4165 Longknife Rd, Reno, NV 89519",
+    "phone": "310-438-8073"
+  },
+  "doctors": [
+    {
+      "role": "Primary Care",
+      "name": "Dr. Shannon L. Zamboni, MD",
+      "address": "601 Ralston St Ste 100, Reno, NV 89503",
+      "phone": "(775) 786-1110",
+      "status": "Active"
+    },
+    {
+      "role": "Urology / TRT",
+      "name": "Dr. Rajiv Jayadevan, MD",
+      "address": "2901 Wilshire Blvd Ste 400, Santa Monica, CA 90403",
+      "phone": "(310) 794-7700",
+      "status": "Active"
+    },
+    {
+      "role": "Therapy (Primary)",
+      "name": "Courtney Derico, LCP",
+      "address": "Rula; in-person LA + telehealth",
+      "phone": "",
+      "status": "Active"
+    },
+    {
+      "role": "Therapy (Secondary)",
+      "name": "Elena Burdick, LCSW",
+      "address": "LifeStance, Santa Monica",
+      "phone": "",
+      "status": "Confirm if ongoing"
+    },
+    {
+      "role": "Psychiatry",
+      "name": "Christina Reichert, PMHNP",
+      "address": "LifeStance, Santa Monica (telehealth)",
+      "phone": "",
+      "status": "Confirm if ongoing"
+    },
+    {
+      "role": "Psychiatry (Previous)",
+      "name": "Victoria Samberg, PMHNP-BC",
+      "address": "Reno Psychiatric Associates, 5305 Reno Corporate Dr, Reno, NV",
+      "phone": "(775) 329-4284",
+      "status": "Prior — records at followmyhealth.com"
+    }
+  ],
+  "insurance": {
+    "current": "COBRA — Anthem Blue Cross (California PPO)",
+    "monthlyPremium": 764.59,
+    "endDate": "2026-09-30",
+    "groupNumber": "G-7912-0312",
+    "memberId": "R23D26222500",
+    "pcp": "Shannon Zamboni, MD",
+    "pharmacy": "Optum / Express Scripts",
+    "notes": "COBRA continuation from IGT employment ending 03/31/2026. 18-month clock started April 1, 2026. ACA SEP opens when COBRA expires. Nevada Health Link at NevadaHealthLink.com or 1-800-547-2927."
+  },
+  "medications": [
+    {"name": "Testosterone Cypionate", "dose": "120 mg (0.6 mL of 200 mg/mL)", "frequency": "1x weekly — Friday", "diagnosis": "TRT for hypogonadism (E29.1)"},
+    {"name": "Trazodone HCl", "dose": "50 mg", "frequency": "Nightly", "notes": "90-day supply via Express Scripts"},
+    {"name": "Methylphenidate", "dose": "5-10 mg", "frequency": "Daily", "notes": "ADHD; under evaluation"},
+    {"name": "Atorvastatin", "dose": "20 mg", "frequency": "2-3x per week", "diagnosis": "Cholesterol / CVD risk (E78.5)"}
+  ],
+  "supplements": {
+    "morning": [
+      "CoQ10 — 100 mg (Doctor's Best)",
+      "Ashwagandha — 600 mg",
+      "Bacopa Monnieri — 320 mg"
+    ],
+    "nightly": [
+      "Magnesium Glycinate — 405 mg"
+    ]
+  },
+  "lifestyle": {
+    "walking": "1+ hour daily",
+    "running": "3x/week incl. long run ~13 mi",
+    "pickleball": "2-3x/week, ~3 hrs/session",
+    "strength": "~100 push-ups + 100 squats daily",
+    "alcohol": "None since Nov 29, 2025",
+    "sleep": "7-8 hours, consistently strong scores",
+    "diet": "Higher protein, lower processed carbs"
+  },
+  "markers": {
+    "testosterone_total": {
+      "label": "Total Testosterone",
+      "unit": "ng/dL",
+      "refLow": 264,
+      "refHigh": 916,
+      "data": [
+        {"date": "2023-08-16", "value": 1270, "note": "Above range"},
+        {"date": "2024-01-12", "value": 615},
+        {"date": "2024-10-25", "value": 1396, "note": "High"},
+        {"date": "2025-02-24", "value": 691},
+        {"date": "2025-09-12", "value": 200, "note": "Low — possible trough"},
+        {"date": "2025-11-10", "value": 1372, "note": "High"},
+        {"date": "2026-02-10", "value": 1392, "note": "High — peak"},
+        {"date": "2026-06-12", "value": 468}
+      ]
+    },
+    "estradiol": {
+      "label": "Estradiol",
+      "unit": "pg/mL",
+      "refLow": 7.6,
+      "refHigh": 42.6,
+      "data": [
+        {"date": "2025-11-10", "value": 44},
+        {"date": "2026-02-10", "value": 63, "note": "Above range"},
+        {"date": "2026-06-12", "value": 30.3}
+      ]
+    },
+    "hemoglobin": {
+      "label": "Hemoglobin",
+      "unit": "g/dL",
+      "refLow": 13.0,
+      "refHigh": 17.7,
+      "data": [
+        {"date": "2024-11-22", "value": 17.2},
+        {"date": "2025-04-17", "value": 18.4, "note": "Above range"},
+        {"date": "2025-09-12", "value": 16.7},
+        {"date": "2025-11-10", "value": 16.3},
+        {"date": "2026-02-10", "value": 16.6},
+        {"date": "2026-06-12", "value": 16.5},
+        {"date": "2026-06-22", "value": 16.5}
+      ]
+    },
+    "hematocrit": {
+      "label": "Hematocrit",
+      "unit": "%",
+      "refLow": 37.5,
+      "refHigh": 51.0,
+      "data": [
+        {"date": "2024-04-17", "value": 50.2},
+        {"date": "2025-02-24", "value": 51.0, "note": "Above threshold"},
+        {"date": "2025-04-17", "value": 53.5, "note": "Above range"},
+        {"date": "2025-09-12", "value": 49.8},
+        {"date": "2025-11-10", "value": 47.2},
+        {"date": "2026-02-10", "value": 50.0},
+        {"date": "2026-06-12", "value": 49.4},
+        {"date": "2026-06-22", "value": 49.5}
+      ]
+    },
+    "total_cholesterol": {
+      "label": "Total Cholesterol",
+      "unit": "mg/dL",
+      "refLow": 100,
+      "refHigh": 199,
+      "data": [
+        {"date": "2024-01-12", "value": 245, "note": "Above range"},
+        {"date": "2024-11-22", "value": 254, "note": "Above range"},
+        {"date": "2025-04-17", "value": 259, "note": "Above range"},
+        {"date": "2025-09-12", "value": 214, "note": "Above range"},
+        {"date": "2026-06-22", "value": 144}
+      ]
+    },
+    "ldl": {
+      "label": "LDL Cholesterol (Calc)",
+      "unit": "mg/dL",
+      "refLow": 0,
+      "refHigh": 99,
+      "data": [
+        {"date": "2025-04-17", "value": 186, "note": "Above range"},
+        {"date": "2025-09-12", "value": 137, "note": "Above range"},
+        {"date": "2026-06-22", "value": 83}
+      ]
+    },
+    "hdl": {
+      "label": "HDL Cholesterol",
+      "unit": "mg/dL",
+      "refLow": 39,
+      "refHigh": 100,
+      "data": [
+        {"date": "2024-01-12", "value": 57},
+        {"date": "2024-11-22", "value": 56},
+        {"date": "2025-04-17", "value": 52},
+        {"date": "2025-09-12", "value": 61},
+        {"date": "2026-06-22", "value": 52}
+      ]
+    },
+    "triglycerides": {
+      "label": "Triglycerides",
+      "unit": "mg/dL",
+      "refLow": 0,
+      "refHigh": 149,
+      "data": [
+        {"date": "2024-01-12", "value": 115},
+        {"date": "2024-11-22", "value": 190, "note": "Above range"},
+        {"date": "2025-04-17", "value": 115},
+        {"date": "2025-09-12", "value": 88},
+        {"date": "2026-06-22", "value": 57}
+      ]
+    },
+    "glucose": {
+      "label": "Glucose (Fasting)",
+      "unit": "mg/dL",
+      "refLow": 70,
+      "refHigh": 99,
+      "data": [
+        {"date": "2025-09-12", "value": 92},
+        {"date": "2026-06-22", "value": 85}
+      ]
+    },
+    "hba1c": {
+      "label": "Hemoglobin A1c",
+      "unit": "%",
+      "refLow": 4.8,
+      "refHigh": 5.6,
+      "data": [
+        {"date": "2025-09-12", "value": 5.3},
+        {"date": "2026-06-22", "value": 5.3}
+      ]
+    },
+    "creatinine": {
+      "label": "Creatinine",
+      "unit": "mg/dL",
+      "refLow": 0.76,
+      "refHigh": 1.27,
+      "data": [
+        {"date": "2024-01-12", "value": 0.99},
+        {"date": "2024-11-22", "value": 1.00},
+        {"date": "2025-04-17", "value": 1.12},
+        {"date": "2025-09-12", "value": 0.93},
+        {"date": "2026-06-22", "value": 1.17}
+      ]
+    },
+    "egfr": {
+      "label": "eGFR",
+      "unit": "mL/min/1.73",
+      "refLow": 59,
+      "refHigh": 120,
+      "trend": "declining",
+      "alert": "⚠️ eGFR declining from 103 → 77 over ~9 months. Discuss with PCP.",
+      "data": [
+        {"date": "2024-01-12", "value": 96},
+        {"date": "2024-11-22", "value": 95},
+        {"date": "2025-04-17", "value": 82},
+        {"date": "2025-09-12", "value": 103},
+        {"date": "2026-06-22", "value": 77}
+      ]
+    },
+    "psa": {
+      "label": "PSA",
+      "unit": "ng/mL",
+      "refLow": 0.0,
+      "refHigh": 4.0,
+      "data": [
+        {"date": "2025-11-10", "value": 0.87},
+        {"date": "2026-06-12", "value": 0.7}
+      ]
+    },
+    "wbc": {
+      "label": "WBC",
+      "unit": "x10E3/uL",
+      "refLow": 3.4,
+      "refHigh": 10.8,
+      "data": [
+        {"date": "2024-01-12", "value": 3.4},
+        {"date": "2024-11-22", "value": 3.3, "note": "Below range"},
+        {"date": "2025-04-17", "value": 5.4},
+        {"date": "2025-09-12", "value": 3.6},
+        {"date": "2026-06-22", "value": 4.3}
+      ]
+    },
+    "platelets": {
+      "label": "Platelets",
+      "unit": "x10E3/uL",
+      "refLow": 150,
+      "refHigh": 450,
+      "data": [
+        {"date": "2024-01-12", "value": 244},
+        {"date": "2024-11-22", "value": 260},
+        {"date": "2025-04-17", "value": 211},
+        {"date": "2025-09-12", "value": 207},
+        {"date": "2026-06-22", "value": 196}
+      ]
+    }
+  },
+  "cardio": {
+    "calciumScore": 189.8,
+    "calciumPercentile": ">90th for age",
+    "lad": 62,
+    "rca": 127.8,
+    "plaqueBurden": "Moderate; no blockage",
+    "mesaRisk": "~6.6% 10-year",
+    "rhythm": "Normal sinus",
+    "pvcs": "Rare (<1%) — near benign",
+    "ekg": "Sinus bradycardia ~56 bpm, early repolarization (normal variant)",
+    "targets": {
+      "ldl": "<70 (ideal <55) — currently 83",
+      "apob": "<80 — last 102 (Sep 2025), needs recheck",
+      "hematocrit": "<50 — currently 49.5% ✅"
+    }
+  },
+  "mentalHealth": {
+    "conditions": ["Benign PVC awareness", "ADHD", "Anxiety (situational)", "Depression (low motivation/focus)"],
+    "therapyFocus": "Anxiety driven by job uncertainty, relationship patterns, communication/conflict patterns, maintaining sobriety, ADHD focus management",
+    "therapyTools": ["CBT Thought Record", "Cognitive Distortion Tracking"]
+  }
+}

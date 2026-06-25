@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Health Dashboard — Jason Weaver</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --red: #f85149;
+    --yellow: #d29922;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 20px;
+    line-height: 1.6;
+  }
+  .locked { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .lock-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 40px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+  }
+  .lock-box h1 { font-size: 24px; margin-bottom: 8px; }
+  .lock-box p { color: var(--muted); margin-bottom: 24px; }
+  .lock-box input {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 16px;
+    margin-bottom: 16px;
+  }
+  .lock-box input:focus { outline: none; border-color: var(--accent); }
+  .lock-box button {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .lock-box button:hover { opacity: 0.9; }
+  .lock-box .error { color: var(--red); margin-top: 12px; display: none; }
+  .dashboard { display: none; }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header h1 { font-size: 28px; }
+  .header .last-updated { color: var(--muted); font-size: 14px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .card h3 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .card .item { margin-bottom: 8px; font-size: 14px; }
+  .card .item strong { display: inline-block; min-width: 80px; color: var(--muted); }
+  .card .item .val { color: var(--text); }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .badge.active { background: #1a3a2a; color: var(--green); }
+  .badge.prior { background: #2d1b1b; color: var(--red); }
+  .badge.confirm { background: #2d281b; color: var(--yellow); }
+  .chart-section { margin-bottom: 24px; }
+  .chart-section h2 {
+    font-size: 18px;
+    margin-bottom: 4px;
+  }
+  .chart-section .subtitle { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+  .chart-container {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+  }
+  .chart-container canvas { max-height: 350px; }
+  .alerts { margin-bottom: 24px; }
+  .alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    border-left: 4px solid;
+  }
+  .alert.warning { background: #2d281b; border-color: var(--yellow); color: #e3c87c; }
+  .alert.info { background: #1a2636; border-color: var(--accent); color: #8bb9ff; }
+  .alert.success { background: #1a3a2a; border-color: var(--green); color: #7ee89e; }
+  .med-table, .doc-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .med-table th, .doc-table th { text-align: left; color: var(--muted); font-weight: 600; padding: 8px 4px; border-bottom: 1px solid var(--border); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .med-table td, .doc-table td { padding: 10px 4px; border-bottom: 1px solid var(--border); }
+  .marker-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; font-size: 13px; }
+  .marker-legend span { display: flex; align-items: center; gap: 4px; }
+  .marker-legend .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .nav-tabs { display: flex; gap: 4px; margin-bottom: 20px; flex-wrap: wrap; }
+  .nav-tabs button {
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .nav-tabs button:hover { border-color: var(--accent); color: var(--text); }
+  .nav-tabs button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .section { display: none; }
+  .section.active { display: block; }
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-card .num { font-size: 24px; font-weight: 700; }
+  .stat-card .num.green { color: var(--green); }
+  .stat-card .num.red { color: var(--red); }
+  .stat-card .num.yellow { color: var(--yellow); }
+  .stat-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+  @media (max-width: 600px) {
+    body { padding: 12px; }
+    .header h1 { font-size: 22px; }
+    .grid { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div id="lockScreen" class="locked">
+  <div class="lock-box">
+    <div style="font-size: 48px; margin-bottom: 16px;">🔒</div>
+    <h1>Health Dashboard</h1>
+    <p>Enter your password to access</p>
+    <input type="password" id="pwInput" placeholder="Password" onkeydown="if(event.key==='Enter')unlock()">
+    <button onclick="unlock()">Unlock</button>
+    <div class="error" id="pwError">Incorrect password</div>
+  </div>
+</div>
+
+<div id="dashboard" class="dashboard">
+
+<div class="header">
+  <div>
+    <h1>🏥 Health Dashboard</h1>
+    <div class="last-updated">Jason Weaver — Last updated Jun 2026</div>
+  </div>
+</div>
+
+<div class="nav-tabs">
+  <button class="active" onclick="switchTab('overview')">Overview</button>
+  <button onclick="switchTab('bloodwork')">Bloodwork</button>
+  <button onclick="switchTab('cardio')">Cardiovascular</button>
+  <button onclick="switchTab('providers')">Providers</button>
+  <button onclick="switchTab('meds')">Medications</button>
+</div>
+
+<div id="tab-overview" class="section active">
+  <div class="stats-row" id="vitalsRow"></div>
+  <div class="grid">
+    <div class="card" id="profileCard"></div>
+    <div class="card" id="insuranceCard"></div>
+    <div class="card" id="lifestyleCard"></div>
+  </div>
+  <div class="alerts" id="alerts"></div>
+</div>
+
+<div id="tab-bloodwork" class="section">
+  <div class="alerts" id="bloodAlerts"></div>
+  <div id="charts"></div>
+</div>
+
+<div id="tab-cardio" class="section">
+  <div class="card">
+    <h3>Cardiovascular Overview</h3>
+    <div id="cardioContent"></div>
+  </div>
+</div>
+
+<div id="tab-providers" class="section">
+  <div class="card">
+    <h3>Care Team</h3>
+    <table class="doc-table" id="docTable"></table>
+  </div>
+</div>
+
+<div id="tab-meds" class="section">
+  <div class="card">
+    <h3>Current Medications</h3>
+    <table class="med-table" id="medTable"></table>
+  </div>
+  <div class="card" style="margin-top:16px;">
+    <h3>Supplements</h3>
+    <div id="supplementContent"></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+let data;
+
+async function hashPW(pw) {
+  const enc = new TextEncoder().encode(pw);
+  const hash = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// SET YOUR PASSWORD HERE — run hashPW('yourpassword') in browser console
+// or replace this with the output of: echo -n 'yourpassword' | shasum -a 256
+const PASSWORD_HASH = '6305c53f64db3e012c057bbf9e4b78ba64500fc1feaefab7f7d0b31e461a42ae';
+
+async function unlock() {
+  const input = document.getElementById('pwInput').value;
+  const hash = await hashPW(input);
+  if (PASSWORD_HASH && hash !== PASSWORD_HASH) {
+    document.getElementById('pwError').style.display = 'block';
+    return;
+  }
+  document.getElementById('lockScreen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  loadDashboard();
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+async function loadDashboard() {
+  const resp = await fetch('health-data.json');
+  data = await resp.json();
+  renderOverview();
+  renderBloodwork();
+  renderCardio();
+  renderProviders();
+  renderMeds();
+}
+
+function renderOverview() {
+  const p = data.profile;
+  document.getElementById('vitalsRow').innerHTML = `
+    <div class="stat-card"><div class="num">${p.age}</div><div class="label">Age</div></div>
+    <div class="stat-card"><div class="num">${p.restingHR}</div><div class="label">Resting HR</div></div>
+    <div class="stat-card"><div class="num green">${p.vo2Max}</div><div class="label">VO2 Max</div></div>
+    <div class="stat-card"><div class="num">${p.bloodPressure}</div><div class="label">BP</div></div>
+    <div class="stat-card"><div class="num">${p.weight.split(' ')[0]}</div><div class="label">Weight (lbs)</div></div>
+  `;
+  document.getElementById('profileCard').innerHTML = `
+    <h3>Profile</h3>
+    <div class="item"><strong>DOB:</strong> ${p.dob}</div>
+    <div class="item"><strong>Height:</strong> ${p.height}</div>
+    <div class="item"><strong>Weight:</strong> ${p.weight}</div>
+    <div class="item"><strong>Body Fat:</strong> ${p.bodyFat}</div>
+    <div class="item"><strong>Address:</strong> ${p.address}</div>
+    <div class="item"><strong>Phone:</strong> ${p.phone}</div>
+  `;
+  const ins = data.insurance;
+  document.getElementById('insuranceCard').innerHTML = `
+    <h3>Insurance</h3>
+    <div class="item"><strong>Plan:</strong> ${ins.current}</div>
+    <div class="item"><strong>Premium:</strong> $${ins.monthlyPremium}/mo</div>
+    <div class="item"><strong>Expires:</strong> ${ins.endDate}</div>
+    <div class="item"><strong>Group:</strong> ${ins.groupNumber}</div>
+    <div class="item"><strong>Member ID:</strong> ${ins.memberId}</div>
+    <div class="item"><strong>Pharmacy:</strong> ${ins.pharmacy}</div>
+  `;
+  const ls = data.lifestyle;
+  document.getElementById('lifestyleCard').innerHTML = `
+    <h3>Lifestyle</h3>
+    <div class="item">🚶 ${ls.walking}</div>
+    <div class="item">🏃 ${ls.running}</div>
+    <div class="item">🏓 ${ls.pickleball}</div>
+    <div class="item">💪 ${ls.strength}</div>
+    <div class="item">🍷 ${ls.alcohol}</div>
+    <div class="item">😴 ${ls.sleep}</div>
+    <div class="item">🥗 ${ls.diet}</div>
+  `;
+  const alerts = [];
+  const tc = data.markers.total_cholesterol.data;
+  const last = tc[tc.length-1];
+  if (last.value < 200) alerts.push({type:'success', text:`✅ Total cholesterol dropped from ${tc[0].value} → ${last.value} — major improvement since starting statin.`});
+  const egfr = data.markers.egfr;
+  const egfrData = egfr.data;
+  const egfrLast = egfrData[egfrData.length-1];
+  const egfrPrev = egfrData[egfrData.length-2];
+  if (egfrLast.value < egfrPrev.value) alerts.push({type:'warning', text:`⚠️ ${egfr.alert}`});
+  const hct = data.markers.hematocrit.data;
+  const hctLast = hct[hct.length-1];
+  if (hctLast.value < 50) alerts.push({type:'success', text:`✅ Hematocrit stable at ${hctLast.value}% — within target for TRT monitoring.`});
+  renderAlerts('alerts', alerts);
+}
+
+function renderAlerts(id, items) {
+  document.getElementById(id).innerHTML = items.map(a => `<div class="alert ${a.type}">${a.text}</div>`).join('');
+}
+
+function renderBloodwork() {
+  const markerKeys = [
+    'total_cholesterol','ldl','hdl','triglycerides','testosterone_total','estradiol',
+    'hemoglobin','hematocrit','creatinine','egfr','glucose','hba1c','psa','wbc','platelets'
+  ];
+  const container = document.getElementById('charts');
+  container.innerHTML = '';
+  const bloodAlerts = [];
+  markerKeys.forEach(key => {
+    const m = data.markers[key];
+    if (!m || m.data.length < 2) return;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'chart-section';
+    wrapper.innerHTML = `
+      <h2>${m.label}</h2>
+      <div class="subtitle">Unit: ${m.unit} | Reference: ${m.refLow}–${m.refHigh}</div>
+      <div class="chart-container"><canvas id="chart-${key}"></canvas></div>
+    `;
+    container.appendChild(wrapper);
+    setTimeout(() => renderChart(key, m), 50);
+  });
+  renderAlerts('bloodAlerts', bloodAlerts);
+}
+
+function renderChart(key, m) {
+  const ctx = document.getElementById('chart-' + key);
+  if (!ctx) return;
+  const labels = m.data.map(d => d.date);
+  const values = m.data.map(d => d.value);
+  const isOptimal = key === 'total_cholesterol' || key === 'ldl' || key === 'triglycerides';
+  const minVal = Math.min(...values, m.refLow);
+  const maxVal = Math.max(...values, m.refHigh);
+  const padding = (maxVal - minVal) * 0.2;
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: m.label,
+        data: values,
+        borderColor: '#58a6ff',
+        backgroundColor: 'rgba(88, 166, 255, 0.1)',
+        fill: false,
+        tension: 0.3,
+        pointBackgroundColor: values.map(v => {
+          if (isOptimal) return v <= m.refLow ? '#3fb950' : v <= m.refHigh ? '#58a6ff' : '#f85149';
+          return v >= m.refLow && v <= m.refHigh ? '#3fb950' : '#f85149';
+        }),
+        pointRadius: 5,
+        pointHoverRadius: 7
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            afterLabel: function(context) {
+              const d = m.data[context.dataIndex];
+              return d.note ? 'Note: ' + d.note : '';
+            }
+          }
+        },
+        annotation: undefined
+      },
+      scales: {
+        x: {
+          ticks: { color: '#8b949e', maxTicksLimit: 8 },
+          grid: { color: 'rgba(48, 54, 61, 0.3)' }
+        },
+        y: {
+          ticks: { color: '#8b949e' },
+          grid: { color: 'rgba(48, 54, 61, 0.3)' }
+        }
+      }
+    },
+    plugins: [{
+      id: 'referenceRange',
+      beforeDraw: function(chart) {
+        const yScale = chart.scales.y;
+        const ctx = chart.ctx;
+        const y1 = yScale.getPixelForValue(m.refHigh);
+        const y0 = yScale.getPixelForValue(m.refLow);
+        ctx.fillStyle = 'rgba(63, 185, 80, 0.06)';
+        ctx.fillRect(chart.chartArea.left, y1, chart.chartArea.right - chart.chartArea.left, y0 - y1);
+        ctx.fillStyle = 'rgba(63, 185, 80, 0.3)';
+        ctx.font = '11px sans-serif';
+        ctx.fillText('Ref range: ' + m.refLow + '–' + m.refHigh + ' ' + m.unit, chart.chartArea.left + 4, y1 - 4);
+      }
+    }]
+  });
+}
+
+function renderCardio() {
+  const c = data.cardio;
+  document.getElementById('cardioContent').innerHTML = `
+    <div class="item"><strong>Calcium Score:</strong> ${c.calciumScore} (${c.calciumPercentile})</div>
+    <div class="item"><strong>LAD:</strong> ${c.lad} | <strong>RCA:</strong> ${c.rca}</div>
+    <div class="item"><strong>Plaque:</strong> ${c.plaqueBurden}</div>
+    <div class="item"><strong>MESA 10yr Risk:</strong> ${c.mesaRisk}</div>
+    <div class="item"><strong>Rhythm:</strong> ${c.rhythm}</div>
+    <div class="item"><strong>PVCs:</strong> ${c.pvcs}</div>
+    <div class="item"><strong>EKG:</strong> ${c.ekg}</div>
+    <div style="margin-top:16px;"><strong>Targets</strong></div>
+    ${Object.entries(c.targets).map(([k,v]) => `<div class="item">• ${v}</div>`).join('')}
+  `;
+}
+
+function renderProviders() {
+  const table = document.getElementById('docTable');
+  table.innerHTML = `
+    <tr><th>Role</th><th>Provider</th><th>Contact</th><th>Status</th></tr>
+    ${data.doctors.map(d => `
+      <tr>
+        <td><strong>${d.role}</strong></td>
+        <td>${d.name}</td>
+        <td style="font-size:13px;color:var(--muted)">${d.address}${d.phone ? '<br>'+d.phone : ''}</td>
+        <td><span class="badge ${d.status.includes('Active') ? 'active' : d.status.includes('Prior') ? 'prior' : 'confirm'}">${d.status}</span></td>
+      </tr>
+    `).join('')}
+  `;
+}
+
+function renderMeds() {
+  document.getElementById('medTable').innerHTML = `
+    <tr><th>Medication</th><th>Dose</th><th>Frequency</th><th>Notes</th></tr>
+    ${data.medications.map(m => `
+      <tr>
+        <td><strong>${m.name}</strong></td>
+        <td>${m.dose}</td>
+        <td>${m.frequency}</td>
+        <td style="font-size:13px;color:var(--muted)">${m.notes || m.diagnosis || ''}</td>
+      </tr>
+    `).join('')}
+  `;
+  const supp = data.supplements;
+  document.getElementById('supplementContent').innerHTML = `
+    <div style="margin-bottom:12px;"><strong>Morning:</strong></div>
+    <ul style="list-style:none;padding-left:0;">
+      ${supp.morning.map(s => `<li style="padding:4px 0;font-size:14px;">• ${s}</li>`).join('')}
+    </ul>
+    <div style="margin:12px 0 8px;"><strong>Nightly:</strong></div>
+    <ul style="list-style:none;padding-left:0;">
+      ${supp.nightly.map(s => `<li style="padding:4px 0;font-size:14px;">• ${s}</li>`).join('')}
+    </ul>
+  `;
+}
+
+// If no password hash set, unlock automatically
+if (!PASSWORD_HASH) {
+  document.getElementById('lockScreen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  loadDashboard();
+}
+</script>
+</body>
+</html>
