@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #000000;
+  --background: #050816;
   --foreground: #ffffff;
 }
 
@@ -24,20 +24,45 @@ body {
 }
 
 a {
-  transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease;
+  transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease,
+    transform 150ms ease;
 }
 
 button {
   font: inherit;
 }
 
-/* Remove default details marker on mobile menu */
 summary::-webkit-details-marker {
   display: none;
 }
 
-/* Hero name — tall condensed editorial font stack */
-.hero-name {
-  font-family: Impact, "Arial Narrow", "Helvetica Neue Condensed",
-    "Franklin Gothic Medium", "Stencil Gothic", sans-serif;
+.pixel-art {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.pixel-heading,
+.pixel-button {
+  font-family: var(--font-geist-mono), "Courier New", monospace;
+  text-transform: uppercase;
+}
+
+.nes-panel,
+.scene-frame {
+  image-rendering: pixelated;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

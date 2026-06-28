@@ -1,374 +1,322 @@
-import Image from "next/image";
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
-/* ── Navigation & Social data ──────────────────────────── */
+const MAP_HOTSPOTS = [
+  {
+    id: "profile",
+    label: "PROFILE",
+    title: "Castle",
+    href: "#about",
+    x: 57,
+    y: 18,
+    w: 18,
+    h: 22,
+    command: "STATUS",
+    description: "Current focus, operating style, and what I am building.",
+  },
+  {
+    id: "career",
+    label: "CAREER",
+    title: "Mountain Trail",
+    href: "#career",
+    x: 42,
+    y: 42,
+    w: 22,
+    h: 22,
+    command: "JOURNEY",
+    description: "Career path, leadership history, and platform operations experience.",
+  },
+  {
+    id: "projects",
+    label: "PROJECTS",
+    title: "Blacksmith",
+    href: "#projects",
+    x: 23,
+    y: 57,
+    w: 20,
+    h: 23,
+    command: "QUESTS",
+    description: "AI tools, automation workflows, dashboards, and practical experiments.",
+  },
+  {
+    id: "resources",
+    label: "RESOURCES",
+    title: "Library",
+    href: "#resources",
+    x: 62,
+    y: 59,
+    w: 19,
+    h: 22,
+    command: "ITEMS",
+    description: "Books, tools, people, media, and useful references.",
+  },
+  {
+    id: "contact",
+    label: "CONTACT",
+    title: "Castle Gate",
+    href: "#contact",
+    x: 78,
+    y: 67,
+    w: 15,
+    h: 20,
+    command: "MESSAGE",
+    description: "Email, LinkedIn, and simple ways to connect.",
+  },
+];
 
-const NAV_ITEMS = [
-  { label: "Home", href: "#home" },
-  { label: "About", href: "#about" },
-  { label: "Career", href: "#career" },
-  { label: "Projects", href: "#projects" },
-  { label: "Resources", href: "#resources" },
-  { label: "Notes", href: "#notes" },
-  { label: "Contact", href: "#contact" },
+const WORLDS = [
+  {
+    id: "about",
+    command: "STATUS",
+    title: "Profile",
+    image: "/images/nes/castle.png",
+    alt: "Pixel art castle hall for the profile section",
+    body: "Technology leader, AI explorer, and builder of systems. I like practical tools, capable teams, clear thinking, and work that improves how people operate.",
+    items: [
+      "Current focus: AI agents and automation",
+      "Operating style: calm, structured, practical",
+      "Direction: better systems for work and life",
+    ],
+  },
+  {
+    id: "career",
+    command: "JOURNEY",
+    title: "Career Path",
+    image: "/images/nes/mountain-trail.png",
+    alt: "Pixel art mountain trail for the career section",
+    body: "20+ years leading global platform operations, cloud platforms, and high-performing teams at scale. The trail runs through infrastructure, operations, leadership, and transformation.",
+    items: [
+      "Global platform operations",
+      "Cloud and infrastructure leadership",
+      "Team building through complex change",
+    ],
+  },
+  {
+    id: "projects",
+    command: "QUESTS",
+    title: "Projects",
+    image: "/images/nes/blacksmith.png",
+    alt: "Pixel art blacksmith workshop for the projects section",
+    body: "This is where rough ideas get forged into working systems. The current bench includes AI assistants, automation workflows, health tools, and commerce experiments.",
+    items: [
+      "AI Coach and personal operating systems",
+      "Comments Clinic GPT and creator tools",
+      "Automation, dashboards, and practical experiments",
+    ],
+  },
+  {
+    id: "resources",
+    command: "ITEMS",
+    title: "Resources",
+    image: "/images/nes/library.png",
+    alt: "Pixel art library shelves for the resources section",
+    body: "A curated inventory of books, tools, people, and media that sharpen judgment, creativity, systems thinking, and health.",
+    items: ["Books", "Tools", "People", "Media"],
+  },
 ];
 
 const SOCIALS = [
-  { label: "X", href: "https://x.com/jasonjweaver", short: "X" },
-  {
-    label: "LinkedIn",
-    href: "https://www.linkedin.com/in/jasonjweaver",
-    short: "in",
-  },
-  { label: "GitHub", href: "https://github.com/json-jason", short: "GH" },
-  {
-    label: "YouTube",
-    href: "https://www.youtube.com/@jasonjweaver",
-    short: "YT",
-  },
-  {
-    label: "Instagram",
-    href: "https://www.instagram.com/jasonjweaver",
-    short: "IG",
-  },
-  { label: "Email", href: "mailto:hello@jasonjweaver.com", short: "@" },
+  { label: "LinkedIn", href: "https://www.linkedin.com/in/jasonweaver/", short: "in" },
+  { label: "X", href: "https://x.com/weaverswigglers", short: "X" },
+  { label: "Email", href: "mailto:emailweaver@gmail.com", short: "@" },
 ];
 
-/* ── Sub-component: Card used across sections ──────────── */
+function PixelButton({ href, children, variant = "gold" }: { href: string; children: React.ReactNode; variant?: "gold" | "blue" }) {
+  const variantClass =
+    variant === "gold"
+      ? "border-[#f6d365] bg-[#3b250a] text-[#fff5bf] hover:bg-[#5a390f] focus-visible:ring-[#f6d365]"
+      : "border-[#8ec5ff] bg-[#102a56] text-[#dff1ff] hover:bg-[#183d78] focus-visible:ring-[#8ec5ff]";
 
-function Card({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
   return (
-    <div className="group bg-white/[0.03] border border-white/[0.06] rounded-lg p-6 hover:bg-white/[0.06] hover:border-white/10 transition-all duration-200">
-      <h4 className="text-base font-semibold text-white mb-2">{title}</h4>
-      <p className="text-sm text-gray-500 leading-relaxed">{description}</p>
+    <Link
+      href={href}
+      className={`pixel-button inline-flex min-h-11 items-center justify-center border-2 px-5 py-3 text-xs font-bold tracking-[0.16em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050816] ${variantClass}`}
+    >
+      {children}
+    </Link>
+  );
+}
+
+function DialogueBox({ command, title, children }: { command: string; title: string; children: React.ReactNode }) {
+  return (
+    <div className="nes-panel border-4 border-[#f8f4d8] bg-[#07101f]/95 p-5 text-[#fff8d8] shadow-[0_0_0_4px_#101828,0_16px_0_rgba(0,0,0,0.35)] md:p-7">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b-2 border-[#f8f4d8]/40 pb-3">
+        <p className="font-mono text-[11px] font-bold tracking-[0.18em] text-[#f6d365]">{command}</p>
+        <p className="font-mono text-[10px] tracking-[0.14em] text-[#8ec5ff]">A: SELECT&nbsp;&nbsp;B: BACK</p>
+      </div>
+      <h2 className="pixel-heading mb-4 text-2xl leading-tight text-white md:text-4xl">{title}</h2>
+      {children}
     </div>
   );
 }
 
-/* ── Section heading helper ────────────────────────────── */
+function StartScreen({ onStart }: { onStart: () => void }) {
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        onStart();
+      }
+    }
 
-function SectionHeading({
-  tag,
-  accent,
-  title,
-}: {
-  tag: string;
-  accent: "amber" | "blue";
-  title: string;
-}) {
-  const accentClass =
-    accent === "amber" ? "text-amber-400/70" : "text-blue-400/70";
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onStart]);
+
   return (
-    <>
-      <h2 className={`text-xs uppercase tracking-[0.2em] ${accentClass} mb-3`}>
-        {tag}
-      </h2>
-      <h3 className="text-3xl md:text-4xl font-bold mb-12">{title}</h3>
-    </>
+    <button
+      type="button"
+      onClick={onStart}
+      className="group relative flex min-h-[100dvh] w-full cursor-pointer items-center justify-center overflow-hidden bg-[#050816] px-4 py-10 text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-[#f6d365]"
+      aria-label="Press Enter or click to start the website"
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(56,110,180,0.35),transparent_42%),linear-gradient(180deg,#060a18,#03040a)]" />
+      <div className="relative z-10 w-full max-w-6xl">
+        <div className="relative mx-auto aspect-[4/3] overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
+          <img
+            src="/images/nes/title-screen.png"
+            alt="WEAVER NES title screen with Jason's hero sprite facing a distant castle"
+            className="h-full w-full object-cover pixel-art"
+          />
+          <div className="absolute inset-x-0 bottom-[9%] text-center">
+            <p className="pixel-heading animate-pulse text-xl leading-none text-[#fff5bf] drop-shadow-[0_3px_0_#111827] md:text-4xl">
+              PRESS START
+            </p>
+            <p className="mt-3 font-mono text-[10px] tracking-[0.18em] text-[#d9e8ff] md:text-xs">
+              CLICK ANYWHERE OR PRESS ENTER
+            </p>
+          </div>
+        </div>
+      </div>
+    </button>
   );
 }
 
-/* ── Page ──────────────────────────────────────────────── */
+function MapHub() {
+  return (
+    <section id="hub" className="min-h-screen scroll-mt-0 bg-[#050816] px-4 py-8 md:px-8 md:py-12">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="font-mono text-[10px] font-bold tracking-[0.2em] text-[#f6d365] md:text-xs">WORLD MAP</p>
+            <h1 className="pixel-heading mt-2 text-3xl leading-none text-white md:text-6xl">Choose Your World</h1>
+          </div>
+          <p className="max-w-md font-mono text-xs leading-5 text-[#9fb4c7] md:text-sm">
+            Hover, focus, or tap a landmark. Each object is a real link into the site.
+          </p>
+        </div>
+
+        <div className="relative overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
+          <img src="/images/nes/village.png" alt="Interactive pixel art village world map" className="block aspect-[4/3] w-full object-cover pixel-art" />
+
+          {MAP_HOTSPOTS.map((spot) => (
+            <Link
+              key={spot.id}
+              href={spot.href}
+              aria-label={`${spot.label}: ${spot.description}`}
+              className="group absolute rounded-sm border-2 border-[#f6d365]/0 bg-[#f6d365]/0 outline-none transition-all duration-150 hover:border-[#f6d365] hover:bg-[#f6d365]/15 focus-visible:border-[#f6d365] focus-visible:bg-[#f6d365]/20 focus-visible:ring-4 focus-visible:ring-[#f6d365]/40"
+              style={{ left: `${spot.x}%`, top: `${spot.y}%`, width: `${spot.w}%`, height: `${spot.h}%` }}
+            >
+              <span className="absolute left-1/2 top-1/2 flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center border-2 border-[#f6d365] bg-[#07101f]/85 font-mono text-[10px] font-bold text-[#fff5bf] shadow-[0_0_0_2px_#101828] md:h-9 md:w-9">
+                !
+              </span>
+              <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-3 w-56 -translate-x-1/2 border-4 border-[#f8f4d8] bg-[#07101f]/95 p-3 text-left opacity-100 shadow-[0_0_0_3px_#101828,0_10px_0_rgba(0,0,0,0.35)] transition md:w-72 md:opacity-0 md:group-hover:opacity-100 md:group-focus-visible:opacity-100">
+                <span className="mb-1 block font-mono text-[10px] font-bold tracking-[0.16em] text-[#f6d365]">{spot.command}</span>
+                <span className="pixel-heading mb-1 block text-sm text-white md:text-base">{spot.label}: {spot.title}</span>
+                <span className="block text-xs leading-5 text-[#d9e8ff] md:text-sm">{spot.description}</span>
+              </span>
+            </Link>
+          ))}
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:hidden">
+          {MAP_HOTSPOTS.map((spot) => (
+            <Link key={spot.id} href={spot.href} className="border-2 border-[#496895] bg-[#101a33] p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f6d365]">
+              <p className="font-mono text-[10px] font-bold tracking-[0.14em] text-[#f6d365]">{spot.command}</p>
+              <p className="mt-1 font-bold text-white">{spot.label}</p>
+              <p className="mt-1 text-xs leading-5 text-[#c5d9ff]">{spot.description}</p>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function WorldSection({ world, reverse = false }: { world: (typeof WORLDS)[number]; reverse?: boolean }) {
+  return (
+    <section id={world.id} className="scroll-mt-8 px-5 py-14 md:px-10 md:py-24 lg:px-16">
+      <div className={`mx-auto grid max-w-7xl items-center gap-8 lg:grid-cols-2 ${reverse ? "lg:[&>*:first-child]:order-2" : ""}`}>
+        <div className="scene-frame aspect-[4/3] w-full overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_18px_0_rgba(0,0,0,0.35)]">
+          <img src={world.image} alt={world.alt} className="h-full w-full object-cover pixel-art" />
+        </div>
+        <DialogueBox command={world.command} title={world.title}>
+          <p className="mb-5 max-w-[64ch] text-base leading-7 text-[#f4e7bd] md:text-lg">{world.body}</p>
+          <ul className="mb-6 grid gap-2 text-sm leading-6 text-[#d9e8ff] md:text-base">
+            {world.items.map((item) => (
+              <li key={item} className="flex gap-3">
+                <span className="text-[#f6d365]">&gt;</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+          <PixelButton href="#hub">BACK TO MAP</PixelButton>
+        </DialogueBox>
+      </div>
+    </section>
+  );
+}
+
+function ContactSection() {
+  return (
+    <footer id="contact" className="scroll-mt-8 px-5 py-16 md:px-10 md:py-24 lg:px-16">
+      <div className="mx-auto max-w-3xl">
+        <DialogueBox command="SEND MESSAGE" title="Castle Gate">
+          <p className="mb-6 text-base leading-7 text-[#f4e7bd] md:text-lg">
+            If you want to compare notes, talk about a role, discuss a project, or send a signal flare, this is the right door.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <PixelButton href="mailto:emailweaver@gmail.com">EMAIL</PixelButton>
+            <PixelButton href="https://www.linkedin.com/in/jasonweaver/" variant="blue">LINKEDIN</PixelButton>
+            <PixelButton href="https://x.com/weaverswigglers" variant="blue">X</PixelButton>
+          </div>
+          <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t-2 border-[#f8f4d8]/30 pt-5">
+            <p className="font-mono text-xs tracking-[0.12em] text-[#8ca6d9]">© 2026 JASON WEAVER</p>
+            <Link href="#hub" className="font-mono text-xs font-bold tracking-[0.14em] text-[#f6d365] hover:text-white">
+              BACK TO MAP
+            </Link>
+          </div>
+        </DialogueBox>
+      </div>
+    </footer>
+  );
+}
 
 export default function Home() {
+  const [started, setStarted] = useState(false);
+
+  useEffect(() => {
+    if (started) {
+      window.requestAnimationFrame(() => {
+        document.getElementById("hub")?.focus({ preventScroll: true });
+        document.getElementById("hub")?.scrollIntoView({ block: "start" });
+      });
+    }
+  }, [started]);
+
+  if (!started) {
+    return <StartScreen onStart={() => setStarted(true)} />;
+  }
+
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* ================================================================
-          DESKTOP SIDEBAR
-          ================================================================ */}
-      <aside className="hidden md:flex fixed left-0 top-0 w-60 h-screen bg-black z-50 flex-col border-r border-white/[0.04]">
-        <div className="flex flex-col h-full p-8">
-          {/* Wordmark — clean single line */}
-          <Link href="/" className="block mb-14">
-            <span className="text-lg font-bold tracking-tight text-white">
-              Jason Weaver
-            </span>
-          </Link>
-
-          {/* Navigation */}
-          <nav className="flex flex-col space-y-0.5">
-            {NAV_ITEMS.map((item, idx) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`group relative flex items-center py-2 text-xs uppercase tracking-[0.18em] transition-colors duration-200 ${
-                  idx === 0
-                    ? "text-amber-400/90"
-                    : "text-gray-400 hover:text-gray-200"
-                }`}
-              >
-                {idx === 0 && (
-                  <span className="absolute -left-8 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-amber-400 rounded-full" />
-                )}
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-
-          {/* Spacer pushes socials to bottom */}
-          <div className="flex-1 min-h-8" />
-
-          {/* Social links — tighter spacing */}
-          <div className="space-y-1.5 pb-1">
-            {SOCIALS.map((s) => (
-              <a
-                key={s.href}
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2.5 group cursor-pointer no-underline"
-              >
-                <span className="w-5 h-5 flex items-center justify-center border border-white/20 rounded-[3px] text-[8px] font-medium text-gray-400 group-hover:border-white/40 group-hover:text-white transition-all duration-200">
-                  {s.short}
-                </span>
-                <span className="text-[11px] uppercase tracking-[0.1em] text-gray-400 group-hover:text-white transition-colors duration-200">
-                  {s.label}
-                </span>
-              </a>
-            ))}
-          </div>
-        </div>
-      </aside>
-
-      {/* ================================================================
-          MOBILE HEADER
-          ================================================================ */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-sm border-b border-white/5">
-        <div className="flex items-center justify-between px-6 py-4">
-          <Link href="/" className="text-lg font-bold tracking-tight">
-            Jason Weaver
-          </Link>
-          <details className="group relative">
-            <summary className="list-none cursor-pointer text-xs uppercase tracking-wider text-gray-400 hover:text-white select-none">
-              Menu
-            </summary>
-            <nav className="absolute right-0 top-full mt-2 w-52 bg-black/95 backdrop-blur-sm border border-white/[0.08] rounded-md p-4 space-y-2 shadow-xl">
-              {NAV_ITEMS.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="block py-1.5 text-sm text-gray-400 hover:text-amber-400 transition-colors"
-                >
-                  {item.label}
-                </Link>
-              ))}
-              <div className="pt-3 mt-3 border-t border-white/10 space-y-1.5">
-                {SOCIALS.map((s) => (
-                  <a
-                    key={s.href}
-                    href={s.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 py-1 text-xs text-gray-400 hover:text-white transition-colors"
-                  >
-                    <span className="w-5 h-5 flex items-center justify-center border border-white/20 rounded-[2px] text-[8px]">
-                      {s.short}
-                    </span>
-                    {s.label}
-                  </a>
-                ))}
-              </div>
-            </nav>
-          </details>
-        </div>
-      </header>
-
-      {/* ================================================================
-          MAIN CONTENT (offset for sidebar on desktop)
-          ================================================================ */}
-      <div className="md:ml-60">
-        {/* ================================================================
-            HERO SECTION — full-screen image with overlay text
-            ================================================================ */}
-        <section id="home" className="relative h-dvh w-full overflow-hidden">
-          <Image
-            src="/images/jason-hero.jpeg"
-            alt="Jason Weaver on the beach"
-            fill
-            priority
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, calc(100vw - 240px)"
-          />
-          {/* Rich left-side gradient — darker for text legibility, natural right side */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/75 via-35% to-transparent to-75%" />
-
-          {/* Hero text — shifted leftward and lower */}
-          <div className="absolute inset-0 flex items-end pb-16 md:pb-24 lg:pb-32">
-            <div className="pl-6 pr-12 md:pl-10 md:pr-16 lg:pl-14 lg:pr-20 w-full max-w-lg">
-              {/* Name — condensed editorial typeface */}
-              <h1
-                className="hero-name text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[0.85] tracking-[-0.01em] text-white"
-              >
-                <span className="block">JASON</span>
-                <span className="block">WEAVER</span>
-              </h1>
-
-              {/* Subtitle — light blue */}
-              <p className="text-base md:text-lg text-[#8ec5ff] mt-6 font-light tracking-[0.06em] uppercase">
-                Technology Leader
-              </p>
-
-              {/* Subtitle — muted blue-gray */}
-              <p className="text-xs md:text-sm text-[#9fb4c7] mt-2 tracking-[0.12em] uppercase">
-                AI Explorer &middot; Builder of Systems
-              </p>
-
-              {/* Gold divider line */}
-              <div className="w-14 h-[2px] bg-[#d6a638] my-7" />
-
-              {/* Body copy — off-white for readability */}
-              <p className="text-sm md:text-base text-[#e5e7eb] leading-[1.75] max-w-md">
-                20+ years leading global platform operations, cloud platforms,
-                and high-performing teams at scale. Exploring the power of AI
-                and automation to build better systems for work and life.
-              </p>
-
-              {/* Buttons */}
-              <div className="flex flex-wrap gap-4 mt-8">
-                <Link
-                  href="#projects"
-                  className="inline-flex items-center border border-[#d6a638] text-[#d6a638] bg-transparent hover:bg-[rgba(214,166,56,0.12)] text-sm font-medium px-7 py-3 rounded-md transition-all duration-200"
-                >
-                  View My Work
-                </Link>
-                <Link
-                  href="#contact"
-                  className="inline-flex items-center border border-[rgba(142,197,255,0.35)] bg-[rgba(60,110,160,0.35)] hover:bg-[rgba(80,130,190,0.45)] text-[#f8fafc] text-sm font-medium px-7 py-3 rounded-md transition-all duration-200"
-                >
-                  Contact Me
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ================================================================
-            CURRENT FOCUS
-            ================================================================ */}
-        <section id="about" className="py-20 md:py-28 px-8 md:px-16 lg:px-20">
-          <SectionHeading tag="Focus" accent="amber" title="Current Focus" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            <Card
-              title="AI & Automation"
-              description="Building and learning with AI agents, tools and systems."
-            />
-            <Card
-              title="Career Evolution"
-              description="Finding my next leadership role where I can make the biggest impact."
-            />
-            <Card
-              title="Health & Longevity"
-              description="Training, nutrition, recovery and performance."
-            />
-            <Card
-              title="Adventure"
-              description="Mountains, trails, endurance and exploration."
-            />
-            <Card
-              title="Lifelong Learning"
-              description="Books, ideas and curiosity fueling everything I do."
-            />
-          </div>
-        </section>
-
-        {/* ================================================================
-            FEATURED PROJECTS
-            ================================================================ */}
-        <section
-          id="projects"
-          className="py-20 md:py-28 px-8 md:px-16 lg:px-20 bg-white/[0.01] border-y border-white/[0.03]"
-        >
-          <SectionHeading
-            tag="Work"
-            accent="blue"
-            title="Featured Projects"
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <Card
-              title="AI Coach (Claude Skill)"
-              description="A personal AI coaching assistant built as a Claude skill, focused on clarity, accountability and better thinking."
-            />
-            <Card
-              title="Comments Clinic GPT"
-              description="A custom GPT built to help creators and businesses turn rough ideas into sharper comments, feedback and engagement."
-            />
-          </div>
-        </section>
-
-        {/* ================================================================
-            RESOURCES I RECOMMEND
-            ================================================================ */}
-        <section
-          id="resources"
-          className="py-20 md:py-28 px-8 md:px-16 lg:px-20"
-        >
-          <SectionHeading
-            tag="Recommendations"
-            accent="amber"
-            title="Resources I Recommend"
-          />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <Card
-              title="Books"
-              description="Curated reading list to broaden perspectives."
-            />
-            <Card
-              title="Tools"
-              description="Software and frameworks that accelerate innovation."
-            />
-            <Card
-              title="People"
-              description="Thought leaders and mentors who inspire."
-            />
-            <Card
-              title="Media"
-              description="Articles, podcasts and videos worth exploring."
-            />
-          </div>
-        </section>
-
-        {/* ================================================================
-            CONTACT / FOOTER
-            ================================================================ */}
-        <footer
-          id="contact"
-          className="py-20 px-8 md:px-16 lg:px-20 border-t border-white/[0.04]"
-        >
-          <div className="max-w-xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Let&rsquo;s Connect
-            </h2>
-            <p className="text-gray-500 mb-8 leading-relaxed">
-              Building systems. Empowering people. Creating impact that lasts.
-            </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              <a
-                href="mailto:hello@jasonjamesweaver.com"
-                className="inline-flex items-center bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-6 py-3 rounded-md transition-colors duration-200"
-              >
-                Get in Touch
-              </a>
-              <a
-                href="https://www.linkedin.com/in/jasonjweaver"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center border border-white/20 hover:border-white/60 text-white text-sm font-medium px-6 py-3 rounded-md transition-colors duration-200"
-              >
-                LinkedIn
-              </a>
-            </div>
-            <p className="text-xs text-gray-600 mt-12">
-              &copy; 2026 Jason Weaver
-            </p>
-          </div>
-        </footer>
-      </div>
-    </div>
+    <main className="min-h-screen bg-[#050816] text-white">
+      <MapHub />
+      {WORLDS.map((world, index) => (
+        <WorldSection key={world.id} world={world} reverse={index % 2 === 1} />
+      ))}
+      <ContactSection />
+    </main>
   );
 }
