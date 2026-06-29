@@ -82,7 +82,7 @@ const MAP_HOTSPOTS: Hotspot[] = [
 const WORLDS: World[] = [
   {
     id: "status",
-    title: "STATUS",
+    title: "CASTLE",
     image: "/images/nes/castle.png",
     alt: "Pixel art castle hall for the status section",
     panelPosition: "md:bottom-8 md:right-8",
@@ -108,7 +108,7 @@ const WORLDS: World[] = [
   },
   {
     id: "quests",
-    title: "QUESTS",
+    title: "BLACKSMITH",
     image: "/images/nes/blacksmith.png",
     alt: "Pixel art blacksmith workshop for the quests section",
     panelPosition: "md:bottom-8 md:right-8",
@@ -135,7 +135,7 @@ const WORLDS: World[] = [
     alt: "Pixel art interior of Weaver's House for the contact section",
     panelPosition: "md:bottom-8 md:right-8",
     body: "If you want to compare notes, talk about a role, discuss a project, or send a signal flare, this is the right room.",
-    items: ["Email: emailweaver@gmail.com", "LinkedIn: jasonweaver", "X: @weaverswigglers"],
+    items: ["Email: emailweaver@gmail.com", "LinkedIn: jasonweaver"],
   },
 ];
 
@@ -218,7 +218,7 @@ function MapHub({ onSelect }: { onSelect: (screen: ScreenId) => void }) {
 
         <div className="relative mx-auto aspect-[4/3] w-[min(100%,calc((100dvh-12rem)*4/3))] overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
           <img src="/images/nes/village.png" alt="Interactive pixel art village world map" className="block h-full w-full object-cover pixel-art" />
-          <p className="pointer-events-none absolute bottom-5 left-1/2 max-w-72 -translate-x-1/2 text-center font-mono text-[10px] font-bold leading-4 tracking-[0.1em] text-[#fff8d8]/95 drop-shadow-[0_2px_0_rgba(0,0,0,0.95)] md:bottom-6 md:max-w-md md:text-[13px]">
+          <p className="pointer-events-none absolute bottom-5 left-1/2 max-w-72 -translate-x-1/2 text-center font-mono text-[11px] font-black leading-4 tracking-[0.11em] text-[#fff8d8] drop-shadow-[0_2px_0_rgba(0,0,0,1)] md:bottom-6 md:max-w-md md:text-sm">
             Hover, focus, or tap a landmark.
           </p>
 
@@ -281,7 +281,6 @@ function WorldScreen({ world, onBack }: { world: World; onBack: () => void }) {
                 <div className="mb-6 flex flex-wrap gap-3">
                   <PixelLink href="mailto:emailweaver@gmail.com">EMAIL</PixelLink>
                   <PixelLink href="https://www.linkedin.com/in/jasonweaver/" variant="blue">LINKEDIN</PixelLink>
-                  <PixelLink href="https://x.com/weaverswigglers" variant="blue">X</PixelLink>
                 </div>
               ) : null}
               <div className="flex flex-wrap items-center justify-between gap-4 border-t-2 border-[#f8f4d8]/30 pt-5">
