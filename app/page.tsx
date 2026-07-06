@@ -218,9 +218,6 @@ function MapHub({ onSelect }: { onSelect: (screen: ScreenId) => void }) {
 
         <div className="relative mx-auto aspect-[4/3] w-[min(100%,calc((100dvh-12rem)*4/3))] overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
           <img src="/images/nes/village.png" alt="Interactive pixel art village world map" className="block h-full w-full object-cover pixel-art" />
-          <p className="pointer-events-none absolute bottom-5 left-1/2 max-w-72 -translate-x-1/2 text-center font-mono text-[11px] font-black leading-4 tracking-[0.11em] text-[#fff8d8] drop-shadow-[0_2px_0_rgba(0,0,0,1)] md:bottom-6 md:max-w-md md:text-sm">
-            Hover, focus, or tap a landmark.
-          </p>
 
           {MAP_HOTSPOTS.map((spot) => (
             <button

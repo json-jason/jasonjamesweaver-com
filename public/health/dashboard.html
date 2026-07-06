@@ -473,26 +473,34 @@ function renderProviders() {
 
 function renderMeds() {
   document.getElementById('medTable').innerHTML = `
-    <tr><th>Medication</th><th>Dose</th><th>Frequency</th><th>Notes</th></tr>
+    <tr><th>Medication</th><th>Dose</th><th>Frequency</th><th>Why / Purpose</th><th>Ideal Timing</th></tr>
     ${data.medications.map(m => `
       <tr>
         <td><strong>${m.name}</strong></td>
         <td>${m.dose}</td>
         <td>${m.frequency}</td>
-        <td style="font-size:13px;color:var(--muted)">${m.notes || m.diagnosis || ''}</td>
+        <td style="font-size:13px;color:var(--muted)">${m.purpose || m.notes || m.diagnosis || ''}</td>
+        <td style="font-size:13px;color:var(--muted)">${m.idealTiming || ''}</td>
       </tr>
     `).join('')}
   `;
   const supp = data.supplements;
+  const renderSupplementGroup = (label, items) => `
+    <div style="margin:${label === 'Morning' ? '0 0 8px' : '14px 0 8px'};"><strong>${label}:</strong></div>
+    <div style="display:grid;gap:8px;">
+      ${(items || []).map(s => typeof s === 'string'
+        ? `<div style="font-size:14px;">• ${s}</div>`
+        : `<div style="font-size:14px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.03);">
+            <div><strong>${s.name}</strong>${s.dose ? ` — ${s.dose}` : ''}</div>
+            <div style="color:var(--muted);margin-top:3px;"><strong>Why:</strong> ${s.purpose || ''}</div>
+            <div style="color:var(--muted);margin-top:3px;"><strong>Timing:</strong> ${s.idealTiming || ''}</div>
+          </div>`
+      ).join('')}
+    </div>
+  `;
   document.getElementById('supplementContent').innerHTML = `
-    <div style="margin-bottom:12px;"><strong>Morning:</strong></div>
-    <ul style="list-style:none;padding-left:0;">
-      ${supp.morning.map(s => `<li style="padding:4px 0;font-size:14px;">• ${s}</li>`).join('')}
-    </ul>
-    <div style="margin:12px 0 8px;"><strong>Nightly:</strong></div>
-    <ul style="list-style:none;padding-left:0;">
-      ${supp.nightly.map(s => `<li style="padding:4px 0;font-size:14px;">• ${s}</li>`).join('')}
-    </ul>
+    ${renderSupplementGroup('Morning', supp.morning)}
+    ${renderSupplementGroup('Nightly', supp.nightly)}
   `;
 }
 
