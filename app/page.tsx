@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 
 type ScreenId = "status" | "journey" | "quests" | "library" | "contact";
 type ViewState = "start" | "map" | ScreenId;
@@ -24,6 +25,38 @@ type World = {
   panelPosition: string;
   body: string;
   items: string[];
+};
+
+type VillagePoint = { x: number; y: number };
+
+const VILLAGE_START: VillagePoint = { x: 50.5, y: 78 };
+
+const WALK_ROUTES: Record<ScreenId, VillagePoint[]> = {
+  status: [
+    { x: 53, y: 70 },
+    { x: 55, y: 58 },
+    { x: 56, y: 44 },
+  ],
+  journey: [
+    { x: 52, y: 69 },
+    { x: 51, y: 59 },
+    { x: 52, y: 48 },
+  ],
+  quests: [
+    { x: 62, y: 76 },
+    { x: 75, y: 75 },
+    { x: 88, y: 69 },
+  ],
+  library: [
+    { x: 42, y: 77 },
+    { x: 29, y: 76 },
+    { x: 16, y: 70 },
+  ],
+  contact: [
+    { x: 44, y: 76 },
+    { x: 38, y: 73 },
+    { x: 36, y: 69 },
+  ],
 };
 
 const MAP_HOTSPOTS: Hotspot[] = [
@@ -167,65 +200,204 @@ function PixelAction({ href, children, onNavigate }: { href: string; children: R
   );
 }
 
-function StartScreen({ onStart }: { onStart: () => void }) {
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        onStart();
-      }
-    }
+function RaisedSwordOverlay() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="title-raised-sword"
+      viewBox="0 0 64 168"
+      preserveAspectRatio="xMidYMax meet"
+    >
+      <g className="title-sword-sprite">
+        <path d="M28 147h16v12H28z" fill="#251512" />
+        <path d="M24 139h24v10H24z" fill="#f6d365" />
+        <path d="M29 133h14v7H29z" fill="#1c2444" />
+        <path d="M34 8h8v125h-8z" fill="#f8f4d8" />
+        <path d="M42 16h5v117h-5z" fill="#a9c9ed" />
+        <path d="M29 16h5v117h-5z" fill="#ffffff" />
+        <path d="M34 0h8v8h-8z" fill="#ffffff" />
+        <path d="M42 8h5v8h-5z" fill="#d7dbea" />
+        <path d="M24 149h24v7H24z" fill="#8e5528" />
+        <path d="M28 156h16v12H28z" fill="#4b2a1c" />
+      </g>
+      <g className="title-sword-sparkles" fill="#fffde3">
+        <path d="M38 4l3 9 9 3-9 3-3 9-3-9-9-3 9-3z" />
+        <path d="M12 48l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" />
+        <path d="M57 43l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" />
+      </g>
+    </svg>
+  );
+}
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onStart]);
+function StartScreen({ onEnter }: { onEnter: () => void }) {
+  const [isStarting, setIsStarting] = useState(false);
+  const startButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    startButtonRef.current?.focus();
+  }, []);
+
+  function begin() {
+    if (isStarting) return;
+
+    setIsStarting(true);
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.setTimeout(onEnter, reducedMotion ? 0 : 680);
+  }
 
   return (
-    <button
-      type="button"
-      onClick={onStart}
-      className="group relative flex min-h-[100dvh] w-full cursor-pointer items-center justify-center overflow-hidden bg-[#050816] px-4 py-10 text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-[#f6d365]"
-      aria-label="Press Enter or click to start the website"
-    >
+    <section className="relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden bg-[#050816] px-4 py-10">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(56,110,180,0.35),transparent_42%),linear-gradient(180deg,#060a18,#03040a)]" />
       <div className="relative z-10 w-full max-w-6xl">
-        <div className="relative mx-auto aspect-[4/3] w-[min(100%,calc((100dvh-5rem)*4/3))] overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
+        <div
+          className={`title-scene relative mx-auto aspect-[4/3] w-[min(100%,calc((100dvh-5rem)*4/3))] overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)] ${isStarting ? "is-starting" : ""}`}
+        >
           <img
             src="/images/nes/title-screen.png"
-            alt="WEAVER NES title screen with Jason's hero sprite facing a distant castle"
+            alt="WEAVER title screen: Jason stands before a distant castle."
             className="h-full w-full object-cover pixel-art"
           />
+          <RaisedSwordOverlay />
+          <div className="title-gleam" aria-hidden="true" />
           <div className="absolute inset-x-0 bottom-[5.5%] text-center">
-            <p className="press-start-text press-start-flash text-3xl leading-none text-white md:text-[3.35rem]">
+            <button
+              type="button"
+              ref={startButtonRef}
+              onClick={begin}
+              autoFocus
+              disabled={isStarting}
+              className="press-start-text press-start-flash min-h-11 px-5 text-3xl leading-none text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#f8f4d8] disabled:cursor-wait disabled:opacity-0 md:text-[3.35rem]"
+              aria-describedby="start-help"
+            >
               PRESS START
+            </button>
+            <p id="start-help" className="sr-only">
+              Press Enter, Space, or activate this button to enter Jason Weaver&apos;s portfolio.
             </p>
           </div>
+          <p className="sr-only" aria-live="polite">
+            {isStarting ? "Jason raises his sword. Entering the village." : ""}
+          </p>
         </div>
       </div>
-    </button>
+    </section>
+  );
+}
+
+function VillageJason({ point, isWalking }: { point: VillagePoint; isWalking: boolean }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={`village-jason ${isWalking ? "is-walking" : ""}`}
+      style={{ left: `${point.x}%`, top: `${point.y}%` }}
+    >
+      <Image
+        src="/images/nes/jason-village-sprite.png"
+        alt=""
+        width={76}
+        height={95}
+        sizes="8vw"
+        className="block h-auto w-full pixel-art"
+      />
+    </div>
   );
 }
 
 function MapHub({ onSelect }: { onSelect: (screen: ScreenId) => void }) {
+  const [destination, setDestination] = useState<ScreenId | null>(null);
+  const [routeStep, setRouteStep] = useState(0);
+  const [wellIsActive, setWellIsActive] = useState(false);
+  const route = destination ? WALK_ROUTES[destination] : null;
+  const isTravelling = route !== null;
+  const point = route ? route[Math.min(routeStep, route.length - 1)] : VILLAGE_START;
+
+  useEffect(() => {
+    if (!destination || !route) return;
+
+    const cancelTravelIfHashChanges = () => {
+      if (window.location.hash !== `#${destination}`) {
+        setDestination(null);
+        setRouteStep(0);
+      }
+    };
+    window.addEventListener("hashchange", cancelTravelIfHashChanges);
+
+    if (routeStep < route.length - 1) {
+      const timer = window.setTimeout(() => setRouteStep((current) => current + 1), 280);
+      return () => {
+        window.clearTimeout(timer);
+        window.removeEventListener("hashchange", cancelTravelIfHashChanges);
+      };
+    }
+
+    const timer = window.setTimeout(() => onSelect(destination), 360);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("hashchange", cancelTravelIfHashChanges);
+    };
+  }, [destination, onSelect, route, routeStep]);
+
+  function travelTo(screen: ScreenId) {
+    if (isTravelling) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      onSelect(screen);
+      return;
+    }
+
+    window.history.replaceState(null, "", `#${screen}`);
+    setDestination(screen);
+    setRouteStep(0);
+  }
+
+  function drawWater() {
+    if (isTravelling) return;
+    setWellIsActive(true);
+    window.setTimeout(() => setWellIsActive(false), 1100);
+  }
+
   return (
     <section className="screen-stage bg-[#050816] px-4 py-5 md:px-8 md:py-8">
       <div className="screen-transition mx-auto flex min-h-[calc(100dvh-2.5rem)] max-w-7xl flex-col justify-center md:min-h-[calc(100dvh-4rem)]">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="pixel-heading text-3xl leading-none text-white md:text-6xl">EXPLORE MY WORLD</h1>
+            <p className="mt-3 text-sm text-[#c5d9ff]" aria-live="polite">
+              {destination ? `Jason is travelling to ${MAP_HOTSPOTS.find((spot) => spot.id === destination)?.label}.` : "Choose a landmark and Jason will lead the way."}
+            </p>
           </div>
         </div>
 
-        <div className="relative mx-auto aspect-[4/3] w-[min(100%,calc((100dvh-12rem)*4/3))] overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
+        <div className="village-scene relative mx-auto aspect-[4/3] w-[min(100%,calc((100dvh-12rem)*4/3))] overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
           <img src="/images/nes/village.png" alt="Interactive pixel art village world map" className="block h-full w-full object-cover pixel-art" />
+          <div className="ambient-cloud ambient-cloud-one" aria-hidden="true" />
+          <div className="ambient-cloud ambient-cloud-two" aria-hidden="true" />
+          <div className="chimney-smoke" aria-hidden="true"><i /><i /><i /></div>
+          <div className="castle-flag" aria-hidden="true" />
+          <div className="forge-glow" aria-hidden="true" />
+          <div className="torch-glow torch-library" aria-hidden="true" />
+          <div className="torch-glow torch-blacksmith" aria-hidden="true" />
+          <VillageJason point={point} isWalking={isTravelling} />
+
+          <button
+            type="button"
+            onClick={drawWater}
+            disabled={isTravelling}
+            aria-label="Draw water from the village well"
+            className={`well-interaction ${wellIsActive ? "is-drawing" : ""}`}
+          >
+            <span className="sr-only">{wellIsActive ? "The bucket lowers and returns with water." : "Draw water from the village well."}</span>
+            <span aria-hidden="true" className="well-bucket" />
+          </button>
 
           {MAP_HOTSPOTS.map((spot) => (
             <button
               type="button"
               key={spot.id}
-              onClick={() => onSelect(spot.id)}
+              onClick={() => travelTo(spot.id)}
+              disabled={isTravelling}
               aria-label={`${spot.label}: ${spot.description}`}
-              className="group absolute rounded-sm outline-none transition-all duration-150 focus-visible:ring-2 focus-visible:ring-[#f8f4d8]/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050816]"
+              className="group absolute rounded-sm outline-none transition-all duration-150 focus-visible:ring-2 focus-visible:ring-[#f8f4d8]/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050816] disabled:cursor-wait"
               style={{ left: `${spot.x}%`, top: `${spot.y}%`, width: `${spot.w}%`, height: `${spot.h}%` }}
             >
               <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-3 w-56 -translate-x-1/2 border-4 border-[#f8f4d8] bg-[#07101f]/95 p-3 text-left opacity-0 shadow-[0_0_0_3px_#101828,0_10px_0_rgba(0,0,0,0.35)] transition group-hover:opacity-100 group-focus-visible:opacity-100 md:w-72">
@@ -241,8 +413,9 @@ function MapHub({ onSelect }: { onSelect: (screen: ScreenId) => void }) {
             <button
               key={spot.id}
               type="button"
-              onClick={() => onSelect(spot.id)}
-              className="border-2 border-[#496895] bg-[#101a33] p-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f6d365]"
+              disabled={isTravelling}
+              onClick={() => travelTo(spot.id)}
+              className="border-2 border-[#496895] bg-[#101a33] p-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f6d365] disabled:cursor-wait disabled:opacity-60"
             >
               <p className="pixel-heading text-base text-white">{spot.label}</p>
               <p className="mt-1 text-xs leading-5 text-[#c5d9ff]">{spot.description}</p>
@@ -260,10 +433,15 @@ function WorldScreen({ world, onBack }: { world: World; onBack: () => void }) {
       <div className="screen-transition mx-auto flex min-h-[calc(100dvh-2.5rem)] max-w-7xl items-center md:min-h-[calc(100dvh-4rem)]">
         <div className="relative mx-auto aspect-[4/3] w-[min(100%,calc((100dvh-2.5rem)*4/3))] overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
           <img src={world.image} alt={world.alt} className="block h-full w-full object-cover pixel-art" />
+          {world.id === "quests" ? <div className="forge-interior-embers" aria-hidden="true"><i /><i /><i /></div> : null}
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_35%,rgba(3,4,10,0.72)_100%)] md:bg-[radial-gradient(circle_at_78%_78%,rgba(3,4,10,0.76),transparent_44%),linear-gradient(180deg,transparent_45%,rgba(3,4,10,0.45)_100%)]" />
 
           <div className={`relative z-10 md:absolute ${world.panelPosition} md:w-[min(43rem,48%)]`}>
-            <div className="nes-panel border-t-4 border-[#f8f4d8] bg-[#07101f]/95 p-5 text-[#fff8d8] shadow-[0_-4px_0_#101828] md:border-4 md:p-7 md:shadow-[0_0_0_4px_#101828,0_16px_0_rgba(0,0,0,0.35)]">
+            <div className="nes-panel dialogue-panel border-t-4 border-[#f8f4d8] bg-[#07101f]/95 p-5 text-[#fff8d8] shadow-[0_-4px_0_#101828] md:border-4 md:p-7 md:shadow-[0_0_0_4px_#101828,0_16px_0_rgba(0,0,0,0.35)]">
+              <div className="dialogue-titlebar mb-4 flex items-center justify-between gap-3 text-[0.65rem] font-bold tracking-[0.18em] text-[#f6d365]">
+                <span>LOCATION DOSSIER</span>
+                <span aria-hidden="true">◆</span>
+              </div>
               <h2 className="pixel-heading mb-4 text-3xl leading-tight text-white md:text-5xl">{world.title}</h2>
               <p className="mb-5 max-w-[64ch] text-base leading-7 text-[#f4e7bd] md:text-lg">{world.body}</p>
               <ul className="mb-6 grid gap-2 text-sm leading-6 text-[#d9e8ff] md:text-base">
@@ -328,7 +506,7 @@ export default function Home() {
 
   return (
     <main className="min-h-[100dvh] overflow-hidden bg-[#050816] text-white">
-      {view === "start" ? <StartScreen onStart={() => goTo("map")} /> : null}
+      {view === "start" ? <StartScreen onEnter={() => goTo("map")} /> : null}
       {view === "map" ? <MapHub onSelect={goTo} /> : null}
       {activeWorld ? <WorldScreen key={activeWorld.id} world={activeWorld} onBack={() => goTo("map")} /> : null}
     </main>
