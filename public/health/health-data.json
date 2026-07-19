@@ -105,6 +105,18 @@
         "dose": "320 mg",
         "purpose": "Cognitive/focus support; may also be calming",
         "idealTiming": "With a meal, ideally morning/first meal; avoid late day if it affects sleep"
+      },
+      {
+        "name": "Nutricost Niacin (Vitamin B3)",
+        "dose": "500 mg — with flushing",
+        "purpose": "Heart/lipid support; nicotinic-acid niacin may support HDL/triglycerides/LDL markers but should be treated as medication-level dosing",
+        "idealTiming": "With a meal, preferably dinner/evening; avoid alcohol, sauna/hot shower, or taking on an empty stomach; monitor flushing and confirm lab monitoring with clinician"
+      },
+      {
+        "name": "Kyolic Aged Garlic Extract Formula 100",
+        "dose": "2 capsules daily / 100 servings per bottle per label",
+        "purpose": "Cardiovascular/circulatory support; may modestly support blood pressure, endothelial function, and oxidative-stress/inflammation markers",
+        "idealTiming": "With a meal, morning or dinner; use caution with aspirin, blood thinners, easy bruising/bleeding, or before procedures"
       }
     ],
     "nightly": [
