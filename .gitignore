@@ -39,3 +39,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.hermes/plans/2026-07-18_immersive-rpg-framework.md
