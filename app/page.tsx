@@ -139,6 +139,16 @@ const WORLDS: World[] = [
   },
 ];
 
+const TITLE_SCENE_FRAMES = [
+  "/images/nes/title-scene/frames/title-frame-0.webp",
+  "/images/nes/title-scene/frames/title-frame-1.webp",
+  "/images/nes/title-scene/frames/title-frame-2.webp",
+] as const;
+
+// The long hold keeps the scene calm; the brief scene changes read as ambient
+// cloud light and a sword glint rather than constant busy motion.
+const TITLE_SCENE_FRAME_DURATIONS = [1250, 180, 620] as const;
+
 function PixelLink({ href, children, variant = "gold" }: { href: string; children: React.ReactNode; variant?: "gold" | "blue" }) {
   const variantClass =
     variant === "gold"
@@ -168,6 +178,49 @@ function PixelAction({ href, children, onNavigate }: { href: string; children: R
 }
 
 function StartScreen({ onStart }: { onStart: () => void }) {
+  const [sceneFrame, setSceneFrame] = useState(0);
+
+  useEffect(() => {
+    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const preloadedFrames = TITLE_SCENE_FRAMES.slice(1).map((src) => {
+      const image = new Image();
+      image.src = src;
+      return image;
+    });
+    let currentFrame = 0;
+    let timer: number | undefined;
+
+    function stopAnimation() {
+      if (timer !== undefined) {
+        window.clearTimeout(timer);
+        timer = undefined;
+      }
+    }
+
+    function advanceFrame() {
+      currentFrame = (currentFrame + 1) % TITLE_SCENE_FRAMES.length;
+      setSceneFrame(currentFrame);
+      timer = window.setTimeout(advanceFrame, TITLE_SCENE_FRAME_DURATIONS[currentFrame]);
+    }
+
+    function syncMotionPreference() {
+      stopAnimation();
+      currentFrame = 0;
+      setSceneFrame(0);
+      if (!motionPreference.matches) {
+        timer = window.setTimeout(advanceFrame, TITLE_SCENE_FRAME_DURATIONS[0]);
+      }
+    }
+
+    syncMotionPreference();
+    motionPreference.addEventListener("change", syncMotionPreference);
+    return () => {
+      stopAnimation();
+      motionPreference.removeEventListener("change", syncMotionPreference);
+      void preloadedFrames;
+    };
+  }, []);
+
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Enter" || event.key === " ") {
@@ -191,7 +244,7 @@ function StartScreen({ onStart }: { onStart: () => void }) {
       <div className="relative z-10 w-full max-w-6xl">
         <div className="relative mx-auto aspect-[4/3] w-[min(100%,calc((100dvh-5rem)*4/3))] overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
           <img
-            src="/images/nes/title-screen.png"
+            src={TITLE_SCENE_FRAMES[sceneFrame]}
             alt="WEAVER NES title screen with Jason's hero sprite facing a distant castle"
             className="h-full w-full object-cover pixel-art"
           />
