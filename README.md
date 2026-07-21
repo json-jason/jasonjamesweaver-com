@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# jasonjamesweaver.com
 
-## Getting Started
+Jason Weaver's personal site — a professional home on the internet, built as a
+small NES-style adventure. Instead of a conventional nav bar, visitors press
+start, watch a pixel-art hero raise his sword, and explore a village world map
+where each location opens a section of the site.
 
-First, run the development server:
+Audience: recruiters, hiring managers, future consulting clients, and the
+professional network. The goal is authentic and human, not corporate.
+
+## The experience
+
+1. **Title screen** — a `PRESS START` screen. Clicking (or keyboard-activating)
+   it plays a short six-frame sword-raise sequence, then enters the world.
+2. **Village map** — an interactive world map with five clickable locations.
+   Hover/focus reveals a description; a button list beneath provides the same
+   navigation on mobile.
+3. **World screens** — each location opens a themed pixel-art scene with a copy
+   panel and a "Return to Village" action.
+
+| Location        | Section  | Content                                          |
+| --------------- | -------- | ------------------------------------------------ |
+| Castle          | Status   | Current focus, operating style, direction        |
+| Journey         | Career   | Platform operations and leadership history        |
+| Blacksmith      | Projects | AI tools, automation, dashboards, experiments    |
+| Village Library | Resources| Books, tools, people, and media                  |
+| Weaver's House  | Contact  | Email and LinkedIn                               |
+
+Navigation is driven by the URL hash (`#map`, `#status`, `#journey`, etc.), so
+locations are deep-linkable. Motion respects `prefers-reduced-motion`: the
+sword sequence is skipped and the visitor is taken straight into the world.
+
+## Tech stack
+
+- [Next.js 16](https://nextjs.org) (App Router) + React 19
+- TypeScript
+- Tailwind CSS v4 (via `@tailwindcss/postcss`)
+- Deployed on [Vercel](https://vercel.com)
+
+The entire experience lives in `app/page.tsx` as a single client component;
+routing between views is handled in-page via the URL hash rather than separate
+routes.
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Other scripts:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build   # production build
+npm run start   # serve the production build
+npm run lint    # eslint
+```
 
-## Learn More
+## Project structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/
+  layout.tsx        Root layout, fonts, and page metadata
+  page.tsx          The full experience: title, map hub, and world screens
+  globals.css       Theme, pixel-art rendering, and animation keyframes
+public/images/
+  nes/              Scene art (WebP): title, village, and the five worlds
+  nes/title-scene/  Title-sequence frames, sword-raise frames, and source art
+scripts/            Python tooling that builds the title-scene frames
+docs/website-vision.md
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Images
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Scene art is stored as WebP (quality 80) and rendered with
+`image-rendering: pixelated` to keep hard pixel edges. Scenes below the fold use
+`loading="lazy"`; the title screen is prioritized as the LCP image. The
+sword-raise frames are preloaded during browser idle time so the sequence plays
+smoothly on click without competing with the initial page load.
 
-## Deploy on Vercel
+### Regenerating the title sequence
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The frames under `public/images/nes/title-scene/` are generated from the source
+art by two scripts (require Python 3 and Pillow):
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+python scripts/build_title_full_frames.py      # builds the title frames
+python scripts/build_title_sword_sequence.py   # builds the sword-raise frames
+```
+
+Master source art lives in `public/images/nes/title-scene/source/`.
+
+## Deployment
+
+Pushes deploy automatically via Vercel. See the
+[Next.js deployment docs](https://nextjs.org/docs/app/building-your-application/deploying)
+for details.

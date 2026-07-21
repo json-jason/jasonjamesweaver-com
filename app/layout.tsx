@@ -12,17 +12,40 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteTitle = "Jason Weaver — Technology Leader & AI Explorer";
+const siteDescription =
+  "20+ years leading global platform operations, cloud platforms, and high-performing teams at scale. Exploring the power of AI and automation to build better systems for work and life.";
+
 export const metadata: Metadata = {
-  title: "Jason Weaver — Technology Leader & AI Explorer",
-  description:
-    "20+ years leading global platform operations, cloud platforms, and high-performing teams at scale. Exploring the power of AI and automation to build better systems for work and life.",
+  metadataBase: new URL("https://jasonjamesweaver.com"),
+  title: siteTitle,
+  description: siteDescription,
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
-    title: "Jason Weaver",
+    title: siteTitle,
     description:
       "Technology Leader & AI Explorer. Platform operations, cloud platforms, and building better systems.",
+    url: "/",
     siteName: "Jason Weaver",
     locale: "en_US",
     type: "website",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Jason Weaver — Technology Leader & AI Explorer",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteTitle,
+    description:
+      "Technology Leader & AI Explorer. Platform operations, cloud platforms, and building better systems.",
+    images: ["/og-image.jpg"],
   },
 };
 

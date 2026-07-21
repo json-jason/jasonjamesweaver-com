@@ -13,7 +13,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "public/images/nes/title-screen.png"
+SOURCE = ROOT / "public/images/nes/title-screen.webp"
 OUT = ROOT / "public/images/nes/title-scene/frames"
 
 # The castle flag is deliberately preserved pixel-for-pixel from the source.
