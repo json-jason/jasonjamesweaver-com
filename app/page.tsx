@@ -148,9 +148,9 @@ const TITLE_SWORD_SEQUENCE = [
   "/images/nes/title-scene/sword-raise/sword-raise-5.webp",
 ] as const;
 
-// The sequence is deliberately short: a clear raise, a readable flash, then
-// entrance to the world. It is not ambient background motion.
-const TITLE_SWORD_FRAME_DURATIONS = [120, 190, 190, 220, 180, 360] as const;
+// A clear raise, a readable gleam, then a held beat on the fully-raised,
+// gleaming sword (~2s) before entering the world. Per-frame milliseconds.
+const TITLE_SWORD_FRAME_DURATIONS = [120, 190, 190, 220, 180, 2200] as const;
 
 function PixelLink({ href, children, variant = "gold" }: { href: string; children: React.ReactNode; variant?: "gold" | "blue" }) {
   const variantClass =
@@ -194,37 +194,18 @@ function StartScreen({ onStart }: { onStart: () => void }) {
   }, []);
 
   useEffect(() => {
-    // Skip preloading the sword frames entirely when the sequence will never
-    // play, and otherwise defer it to idle time so it does not compete with the
-    // title screen (the LCP image) for bandwidth.
+    // The sequence never plays under reduced motion, so there is nothing to
+    // preload. Otherwise fetch AND decode every frame up front: the frames are
+    // rendered as stacked layers, so once they are decoded, switching which one
+    // is visible is instant with no load/decode flash between frames.
     if (reducedMotion) return;
 
-    // Held in a ref-like closure so the browser keeps the decoded frames warm
-    // until this screen unmounts.
-    const preloadedFrames: HTMLImageElement[] = [];
-    const preload = () => {
-      for (const src of TITLE_SWORD_SEQUENCE) {
-        const image = new Image();
-        image.src = src;
-        preloadedFrames.push(image);
-      }
-    };
-
-    const idle = window.requestIdleCallback;
-    const cancelIdle = window.cancelIdleCallback;
-    if (typeof idle === "function") {
-      const handle = idle(preload, { timeout: 2000 });
-      return () => {
-        cancelIdle?.(handle);
-        preloadedFrames.length = 0;
-      };
-    }
-
-    const timer = window.setTimeout(preload, 400);
-    return () => {
-      window.clearTimeout(timer);
-      preloadedFrames.length = 0;
-    };
+    const images = TITLE_SWORD_SEQUENCE.map((src) => {
+      const image = new Image();
+      image.src = src;
+      return image;
+    });
+    void Promise.all(images.map((image) => image.decode().catch(() => undefined)));
   }, [reducedMotion]);
 
   useEffect(() => {
@@ -248,8 +229,6 @@ function StartScreen({ onStart }: { onStart: () => void }) {
     setSequenceFrame(0);
   }
 
-  const source = sequenceFrame === null ? "/images/nes/title-screen.webp" : TITLE_SWORD_SEQUENCE[sequenceFrame];
-
   return (
     <button
       type="button"
@@ -261,13 +240,28 @@ function StartScreen({ onStart }: { onStart: () => void }) {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(56,110,180,0.35),transparent_42%),linear-gradient(180deg,#060a18,#03040a)]" />
       <div className="relative z-10 w-full max-w-6xl">
         <div className="relative mx-auto aspect-[4/3] w-[min(100%,calc((100dvh-5rem)*4/3))] overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
+          {/* Base title screen (shown before the sequence starts). */}
           <img
-            src={source}
+            src="/images/nes/title-screen.webp"
             alt="WEAVER NES title screen with Jason's hero sprite facing a distant castle"
-            className="h-full w-full object-cover pixel-art"
+            className="absolute inset-0 h-full w-full object-cover pixel-art"
+            style={{ opacity: sequenceFrame === null ? 1 : 0 }}
             fetchPriority="high"
             decoding="async"
           />
+          {/* Sword-raise frames stacked on top; only the active one is opaque.
+              No src swapping means no blank flash between frames. */}
+          {TITLE_SWORD_SEQUENCE.map((frameSrc, index) => (
+            <img
+              key={frameSrc}
+              src={frameSrc}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full object-cover pixel-art"
+              style={{ opacity: sequenceFrame === index ? 1 : 0 }}
+              decoding="async"
+            />
+          ))}
           <div className="absolute inset-x-0 bottom-[5.5%] text-center">
             <p className={`press-start-text text-3xl leading-none text-white md:text-[3.35rem] ${isEntering ? "opacity-0" : "press-start-flash"}`}>
               PRESS START
