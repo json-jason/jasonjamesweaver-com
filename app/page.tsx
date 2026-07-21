@@ -145,15 +145,27 @@ const TITLE_SWORD_SEQUENCE = [
   "/images/nes/title-scene/sword-raise/raise-mid-2.webp", // high raise
   "/images/nes/title-scene/sword-raise/sword-raise-2.webp", // apex
   "/images/nes/title-scene/sword-raise/sword-raise-4.webp", // apex + gleam
-  "/images/nes/title-scene/sword-raise/sword-raise-5.webp", // apex + full gleam (held)
+  "/images/nes/title-scene/sword-raise/sword-raise-5.webp", // apex + full gleam
+  // The raised sword makes the name shine: a highlight sweeps L→R over the gold.
+  "/images/nes/title-scene/gold-sweep/gold-sweep-0.webp",
+  "/images/nes/title-scene/gold-sweep/gold-sweep-1.webp",
+  "/images/nes/title-scene/gold-sweep/gold-sweep-2.webp",
+  "/images/nes/title-scene/gold-sweep/gold-sweep-3.webp",
+  "/images/nes/title-scene/gold-sweep/gold-sweep-4.webp",
+  "/images/nes/title-scene/gold-sweep/gold-sweep-5.webp",
+  "/images/nes/title-scene/gold-sweep/gold-sweep-6.webp",
+  "/images/nes/title-scene/gold-sweep/gold-sweep-7.webp", // shine gone, held
 ] as const;
 
-// A quick raise (down → low → high → apex), a readable gleam, then a held beat
-// on the fully-raised, gleaming sword (~1s) before entering. Per-frame ms.
-const TITLE_SWORD_FRAME_DURATIONS = [130, 130, 130, 150, 130, 1000] as const;
+// Quick raise (down → low → high → apex), a readable gleam, a beat on the
+// gleaming sword, then a fast shine sweeping across the WEAVER gold, then a
+// held beat before entering. Per-frame milliseconds.
+const TITLE_SWORD_FRAME_DURATIONS = [
+  130, 130, 130, 150, 120, 300, 70, 70, 70, 70, 70, 70, 70, 900,
+] as const;
 
-// Ambient idle loop shown before PRESS START: the castle flag waves and the
-// river shimmers. Frame 0 is the calm baseline used as the LCP image.
+// Ambient idle loop shown before PRESS START: the river shimmers (the flag is
+// left crisp and static). Frame 0 is the calm baseline used as the LCP image.
 const TITLE_AMBIENT_SEQUENCE = [
   "/images/nes/title-scene/ambient/ambient-0.webp",
   "/images/nes/title-scene/ambient/ambient-1.webp",
