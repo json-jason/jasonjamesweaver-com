@@ -149,8 +149,8 @@ const TITLE_SWORD_SEQUENCE = [
 ] as const;
 
 // A clear raise, a readable gleam, then a held beat on the fully-raised,
-// gleaming sword (~2s) before entering the world. Per-frame milliseconds.
-const TITLE_SWORD_FRAME_DURATIONS = [120, 190, 190, 220, 180, 2200] as const;
+// gleaming sword (~1s) before entering the world. Per-frame milliseconds.
+const TITLE_SWORD_FRAME_DURATIONS = [120, 190, 190, 220, 180, 1000] as const;
 
 function PixelLink({ href, children, variant = "gold" }: { href: string; children: React.ReactNode; variant?: "gold" | "blue" }) {
   const variantClass =
