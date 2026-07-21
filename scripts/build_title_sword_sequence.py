@@ -13,7 +13,7 @@ from math import hypot
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "public/images/nes/title-screen.png"
+SOURCE = ROOT / "public/images/nes/title-screen.webp"
 APEX_SOURCE = ROOT / "public/images/nes/title-scene/source/title-apex.png"
 OUT = ROOT / "public/images/nes/title-scene/sword-raise"
 

@@ -83,7 +83,7 @@ const WORLDS: World[] = [
   {
     id: "status",
     title: "CASTLE",
-    image: "/images/nes/castle.png",
+    image: "/images/nes/castle.webp",
     alt: "Pixel art castle hall for the status section",
     panelPosition: "md:bottom-8 md:right-8",
     body: "Technology leader, AI explorer, and builder of systems. I like practical tools, capable teams, clear thinking, and work that improves how people operate.",
@@ -96,7 +96,7 @@ const WORLDS: World[] = [
   {
     id: "journey",
     title: "JOURNEY",
-    image: "/images/nes/mountain-trail.png",
+    image: "/images/nes/mountain-trail.webp",
     alt: "Pixel art mountain trail for the journey section",
     panelPosition: "md:bottom-8 md:left-8",
     body: "20+ years leading global platform operations, cloud platforms, and high-performing teams at scale. The trail runs through infrastructure, operations, leadership, and transformation.",
@@ -109,7 +109,7 @@ const WORLDS: World[] = [
   {
     id: "quests",
     title: "BLACKSMITH",
-    image: "/images/nes/blacksmith.png",
+    image: "/images/nes/blacksmith.webp",
     alt: "Pixel art blacksmith workshop for the quests section",
     panelPosition: "md:bottom-8 md:right-8",
     body: "This is where rough ideas get forged into working systems. The current bench includes AI assistants, automation workflows, health tools, and commerce experiments.",
@@ -122,7 +122,7 @@ const WORLDS: World[] = [
   {
     id: "library",
     title: "LIBRARY",
-    image: "/images/nes/library.png",
+    image: "/images/nes/library.webp",
     alt: "Pixel art library shelves for the library section",
     panelPosition: "md:bottom-8 md:left-8",
     body: "A curated inventory of books, tools, people, and media that sharpen judgment, creativity, systems thinking, and health.",
@@ -131,7 +131,7 @@ const WORLDS: World[] = [
   {
     id: "contact",
     title: "WEAVER'S HOUSE",
-    image: "/images/nes/weavers-house.png",
+    image: "/images/nes/weavers-house.webp",
     alt: "Pixel art interior of Weaver's House for the contact section",
     panelPosition: "md:bottom-8 md:right-8",
     body: "If you want to compare notes, talk about a role, discuss a project, or send a signal flare, this is the right room.",
@@ -194,13 +194,38 @@ function StartScreen({ onStart }: { onStart: () => void }) {
   }, []);
 
   useEffect(() => {
-    const preloadedFrames = TITLE_SWORD_SEQUENCE.map((src) => {
-      const image = new Image();
-      image.src = src;
-      return image;
-    });
-    return () => void preloadedFrames;
-  }, []);
+    // Skip preloading the sword frames entirely when the sequence will never
+    // play, and otherwise defer it to idle time so it does not compete with the
+    // title screen (the LCP image) for bandwidth.
+    if (reducedMotion) return;
+
+    // Held in a ref-like closure so the browser keeps the decoded frames warm
+    // until this screen unmounts.
+    const preloadedFrames: HTMLImageElement[] = [];
+    const preload = () => {
+      for (const src of TITLE_SWORD_SEQUENCE) {
+        const image = new Image();
+        image.src = src;
+        preloadedFrames.push(image);
+      }
+    };
+
+    const idle = window.requestIdleCallback;
+    const cancelIdle = window.cancelIdleCallback;
+    if (typeof idle === "function") {
+      const handle = idle(preload, { timeout: 2000 });
+      return () => {
+        cancelIdle?.(handle);
+        preloadedFrames.length = 0;
+      };
+    }
+
+    const timer = window.setTimeout(preload, 400);
+    return () => {
+      window.clearTimeout(timer);
+      preloadedFrames.length = 0;
+    };
+  }, [reducedMotion]);
 
   useEffect(() => {
     if (sequenceFrame === null) return;
@@ -223,7 +248,7 @@ function StartScreen({ onStart }: { onStart: () => void }) {
     setSequenceFrame(0);
   }
 
-  const source = sequenceFrame === null ? "/images/nes/title-screen.png" : TITLE_SWORD_SEQUENCE[sequenceFrame];
+  const source = sequenceFrame === null ? "/images/nes/title-screen.webp" : TITLE_SWORD_SEQUENCE[sequenceFrame];
 
   return (
     <button
@@ -240,6 +265,8 @@ function StartScreen({ onStart }: { onStart: () => void }) {
             src={source}
             alt="WEAVER NES title screen with Jason's hero sprite facing a distant castle"
             className="h-full w-full object-cover pixel-art"
+            fetchPriority="high"
+            decoding="async"
           />
           <div className="absolute inset-x-0 bottom-[5.5%] text-center">
             <p className={`press-start-text text-3xl leading-none text-white md:text-[3.35rem] ${isEntering ? "opacity-0" : "press-start-flash"}`}>
@@ -266,7 +293,7 @@ function MapHub({ onSelect }: { onSelect: (screen: ScreenId) => void }) {
         </div>
 
         <div className="relative mx-auto aspect-[4/3] w-[min(100%,calc((100dvh-12rem)*4/3))] overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
-          <img src="/images/nes/village.png" alt="Interactive pixel art village world map" className="block h-full w-full object-cover pixel-art" />
+          <img src="/images/nes/village.webp" alt="Interactive pixel art village world map" className="block h-full w-full object-cover pixel-art" decoding="async" />
 
           {MAP_HOTSPOTS.map((spot) => (
             <button
@@ -308,7 +335,7 @@ function WorldScreen({ world, onBack }: { world: World; onBack: () => void }) {
     <section className="screen-stage bg-[#050816] px-4 py-5 md:px-8 md:py-8">
       <div className="screen-transition mx-auto flex min-h-[calc(100dvh-2.5rem)] max-w-7xl items-center md:min-h-[calc(100dvh-4rem)]">
         <div className="relative mx-auto aspect-[4/3] w-[min(100%,calc((100dvh-2.5rem)*4/3))] overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
-          <img src={world.image} alt={world.alt} className="block h-full w-full object-cover pixel-art" />
+          <img src={world.image} alt={world.alt} className="block h-full w-full object-cover pixel-art" loading="lazy" decoding="async" />
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_35%,rgba(3,4,10,0.72)_100%)] md:bg-[radial-gradient(circle_at_78%_78%,rgba(3,4,10,0.76),transparent_44%),linear-gradient(180deg,transparent_45%,rgba(3,4,10,0.45)_100%)]" />
 
           <div className={`relative z-10 md:absolute ${world.panelPosition} md:w-[min(43rem,48%)]`}>
