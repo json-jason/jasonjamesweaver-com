@@ -301,6 +301,9 @@ function StartScreen({ onStart }: { onStart: () => void }) {
               decoding="async"
             />
           ))}
+          {/* Soft haze drifting slowly left-to-right across the sky. Purely
+              decorative overlay; does not touch the baked art. */}
+          <div className="title-haze" aria-hidden="true" />
           <div className="absolute inset-x-0 bottom-[5.5%] text-center">
             <p className={`press-start-text text-3xl leading-none text-white md:text-[3.35rem] ${isEntering ? "opacity-0" : "press-start-flash"}`}>
               PRESS START

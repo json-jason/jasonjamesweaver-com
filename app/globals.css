@@ -78,6 +78,63 @@ summary::-webkit-details-marker {
   backdrop-filter: blur(1px);
 }
 
+/* Soft haze drifting slowly left-to-right over the open sky band. Two parallax
+   layers of faint warm puffs; each scrolls exactly one tile width so the loop
+   is seamless. Screen blend keeps it as light wisps, never darkening. */
+.title-haze {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 40%;
+  height: 22%;
+  pointer-events: none;
+  overflow: hidden;
+  mix-blend-mode: screen;
+  opacity: 0.7;
+}
+
+.title-haze::before,
+.title-haze::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat-x;
+}
+
+.title-haze::before {
+  background-image: radial-gradient(
+    closest-side,
+    rgba(255, 244, 226, 0.16),
+    transparent
+  );
+  background-size: 620px 110px;
+  background-position: 0 34%;
+  animation: haze-drift-a 58s linear infinite;
+}
+
+.title-haze::after {
+  background-image: radial-gradient(
+    closest-side,
+    rgba(255, 236, 216, 0.12),
+    transparent
+  );
+  background-size: 780px 84px;
+  background-position: 0 66%;
+  animation: haze-drift-b 82s linear infinite;
+}
+
+@keyframes haze-drift-a {
+  to {
+    background-position: 620px 34%;
+  }
+}
+
+@keyframes haze-drift-b {
+  to {
+    background-position: 780px 66%;
+  }
+}
+
 @keyframes screen-fade-in {
   from {
     opacity: 0;
