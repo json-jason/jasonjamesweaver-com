@@ -29,10 +29,20 @@ FRAMES = 6
 # River band in the lower-left. Only blue "water" pixels inside are shimmered.
 WATER_BOX = (70, 905, 330, 1072)
 
+# The castle flag. We shimmer light across it (no pixel movement) to suggest a
+# breeze; the mask below cleanly isolates the navy cloth from the purple sky.
+FLAG_BOX = (1004, 428, 1066, 468)
+
 
 def is_water(r: int, g: int, b: int) -> bool:
     # Blue-dominant (excludes green trees/grass) and not too dark.
     return b > g + 6 and b >= r and b > 85
+
+
+def is_flag(r: int, g: int, b: int) -> bool:
+    # Strong blue dominance and not too bright: catches the navy pennant while
+    # excluding the lighter purple sky around it.
+    return b > r + 18 and b > g + 8 and (r + g + b) < 360
 
 
 def make_frame(source: Image.Image, phase: float) -> Image.Image:
@@ -52,6 +62,21 @@ def make_frame(source: Image.Image, phase: float) -> Image.Image:
                 fp[x, y] = (min(255, r + 26), min(255, g + 28), min(255, b + 24), a)
             elif wave < -0.72:  # troughs dip slightly
                 fp[x, y] = (max(0, r - 14), max(0, g - 12), max(0, b - 6), a)
+
+    # Flag: a band of light ripples along the cloth (pole → tip) once per loop,
+    # brightening/dimming the navy pixels to read as a breeze. No pixels move,
+    # so the crisp pennant shape is preserved.
+    fx0, fy0, fx1, fy1 = FLAG_BOX
+    for y in range(fy0, fy1):
+        for x in range(fx0, fx1):
+            r, g, b, a = sp[x, y]
+            if not is_flag(r, g, b):
+                continue
+            wave = math.sin(x * 0.32 + y * 0.10 - phase)
+            if wave > 0.45:  # cloth catches the light
+                fp[x, y] = (min(255, r + 34), min(255, g + 44), min(255, b + 46), a)
+            elif wave < -0.55:  # cloth in the trough of the wave
+                fp[x, y] = (max(0, r - 16), max(0, g - 16), max(0, b - 12), a)
     return frame
 
 
