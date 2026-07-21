@@ -152,6 +152,18 @@ const TITLE_SWORD_SEQUENCE = [
 // on the fully-raised, gleaming sword (~1s) before entering. Per-frame ms.
 const TITLE_SWORD_FRAME_DURATIONS = [130, 130, 130, 150, 130, 1000] as const;
 
+// Ambient idle loop shown before PRESS START: the castle flag waves and the
+// river shimmers. Frame 0 is the calm baseline used as the LCP image.
+const TITLE_AMBIENT_SEQUENCE = [
+  "/images/nes/title-scene/ambient/ambient-0.webp",
+  "/images/nes/title-scene/ambient/ambient-1.webp",
+  "/images/nes/title-scene/ambient/ambient-2.webp",
+  "/images/nes/title-scene/ambient/ambient-3.webp",
+  "/images/nes/title-scene/ambient/ambient-4.webp",
+  "/images/nes/title-scene/ambient/ambient-5.webp",
+] as const;
+const TITLE_AMBIENT_FRAME_MS = 170;
+
 function PixelLink({ href, children, variant = "gold" }: { href: string; children: React.ReactNode; variant?: "gold" | "blue" }) {
   const variantClass =
     variant === "gold"
@@ -182,6 +194,7 @@ function PixelAction({ href, children, onNavigate }: { href: string; children: R
 
 function StartScreen({ onStart }: { onStart: () => void }) {
   const [sequenceFrame, setSequenceFrame] = useState<number | null>(null);
+  const [ambientFrame, setAmbientFrame] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
   const isEntering = sequenceFrame !== null;
 
@@ -194,19 +207,28 @@ function StartScreen({ onStart }: { onStart: () => void }) {
   }, []);
 
   useEffect(() => {
-    // The sequence never plays under reduced motion, so there is nothing to
-    // preload. Otherwise fetch AND decode every frame up front: the frames are
-    // rendered as stacked layers, so once they are decoded, switching which one
-    // is visible is instant with no load/decode flash between frames.
+    // Nothing animates under reduced motion, so there is nothing to preload.
+    // Otherwise fetch AND decode every frame (ambient loop + sword sequence) up
+    // front: the frames render as stacked layers, so once decoded, switching
+    // which one is visible is instant with no load/decode flash.
     if (reducedMotion) return;
 
-    const images = TITLE_SWORD_SEQUENCE.map((src) => {
+    const images = [...TITLE_AMBIENT_SEQUENCE, ...TITLE_SWORD_SEQUENCE].map((src) => {
       const image = new Image();
       image.src = src;
       return image;
     });
     void Promise.all(images.map((image) => image.decode().catch(() => undefined)));
   }, [reducedMotion]);
+
+  useEffect(() => {
+    // Gently loop the ambient title frames until the sword sequence begins.
+    if (reducedMotion || isEntering) return;
+    const timer = window.setInterval(() => {
+      setAmbientFrame((frame) => (frame + 1) % TITLE_AMBIENT_SEQUENCE.length);
+    }, TITLE_AMBIENT_FRAME_MS);
+    return () => window.clearInterval(timer);
+  }, [reducedMotion, isEntering]);
 
   useEffect(() => {
     if (sequenceFrame === null) return;
@@ -240,15 +262,20 @@ function StartScreen({ onStart }: { onStart: () => void }) {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(56,110,180,0.35),transparent_42%),linear-gradient(180deg,#060a18,#03040a)]" />
       <div className="relative z-10 w-full max-w-6xl">
         <div className="relative mx-auto aspect-[4/3] w-[min(100%,calc((100dvh-5rem)*4/3))] overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
-          {/* Base title screen (shown before the sequence starts). */}
-          <img
-            src="/images/nes/title-screen.webp"
-            alt="WEAVER NES title screen with Jason's hero sprite facing a distant castle"
-            className="absolute inset-0 h-full w-full object-cover pixel-art"
-            style={{ opacity: sequenceFrame === null ? 1 : 0 }}
-            fetchPriority="high"
-            decoding="async"
-          />
+          {/* Ambient title loop (before start): waving flag + shimmering river.
+              Only the active frame is opaque, and only while not entering. */}
+          {TITLE_AMBIENT_SEQUENCE.map((ambientSrc, index) => (
+            <img
+              key={ambientSrc}
+              src={ambientSrc}
+              alt={index === 0 ? "WEAVER NES title screen with Jason's hero sprite facing a distant castle" : ""}
+              aria-hidden={index === 0 ? undefined : true}
+              className="absolute inset-0 h-full w-full object-cover pixel-art"
+              style={{ opacity: !isEntering && ambientFrame === index ? 1 : 0 }}
+              fetchPriority={index === 0 ? "high" : "low"}
+              decoding="async"
+            />
+          ))}
           {/* Sword-raise frames stacked on top; only the active one is opaque.
               No src swapping means no blank flash between frames. */}
           {TITLE_SWORD_SEQUENCE.map((frameSrc, index) => (
