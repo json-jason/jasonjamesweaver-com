@@ -38,18 +38,25 @@ def is_water(r: int, g: int, b: int) -> bool:
 
 
 def build_clean_sky(base: Image.Image) -> Image.Image:
-    """Return a copy with the flag erased, filled per-row with local sky color."""
+    """Return a copy with the flag erased. For each row, any bluish pixel (the
+    navy pennant) is replaced with clean sky sampled from just RIGHT of the flag
+    at the same row, preserving the vertical sky gradient. Brownish pole pixels
+    (r > b) and pinkish sky (r >= b) are left untouched, so the pole survives."""
     px = base.load()
     x0, y0, x1, y1 = FLAG_BOX
     for y in range(y0, y1):
-        sky = [px[x, y] for x in range(x0, x1) if not is_flag(*px[x, y][:3])]
-        if not sky:
-            continue
-        n = len(sky)
-        avg = (sum(c[0] for c in sky) // n, sum(c[1] for c in sky) // n, sum(c[2] for c in sky) // n, 255)
+        ref = [px[x, y] for x in range(x1 + 4, x1 + 12)]  # open sky to the right
+        n = len(ref)
+        sky = (
+            sum(c[0] for c in ref) // n,
+            sum(c[1] for c in ref) // n,
+            sum(c[2] for c in ref) // n,
+            255,
+        )
         for x in range(x0, x1):
-            if is_flag(*px[x, y][:3]):
-                px[x, y] = avg
+            r, g, b, _ = px[x, y]
+            if b > r:  # bluish -> flag pixel; pole (brown) and sky (pink) keep
+                px[x, y] = sky
     return base
 
 
@@ -68,9 +75,11 @@ def collect_flag(source: Image.Image) -> list[tuple[int, int, tuple]]:
 def make_frame(clean: Image.Image, flag_pixels: list, phase: float) -> Image.Image:
     frame = clean.copy()
     fp = frame.load()
+    cp = clean.load()
     # --- Flag: gentle traveling undulation. Whole columns shift by the same
     # small dy (<=2px) and the wave is low-frequency, so the cloth stays
     # connected instead of fragmenting into detached specks. ---
+    drawn: dict[tuple[int, int], tuple] = {}
     for x, y, color in flag_pixels:
         d = x - POLE_X
         amp = 0.5 + 0.038 * d  # ~0.5px near the pole, ~2px at the tip
@@ -78,16 +87,46 @@ def make_frame(clean: Image.Image, flag_pixels: list, phase: float) -> Image.Ima
         dy = max(-2, min(2, dy))
         ny = min(clean.height - 1, max(0, y + dy))
         fp[x, ny] = color
+        drawn[(x, ny)] = color
 
-    # --- Water: traveling sparkle over the blue highlights ---
-    cp = clean.load()
+    # Keep only the largest connected blob of flag pixels (8-connectivity) and
+    # erase everything detached from it back to sky. The wave keeps the pennant
+    # body contiguous, so this removes any stray dark specks of any size without
+    # touching the flag itself.
+    visited: set[tuple[int, int]] = set()
+    largest: list[tuple[int, int]] = []
+    for start in drawn:
+        if start in visited:
+            continue
+        stack = [start]
+        visited.add(start)
+        component = []
+        while stack:
+            cx, cy = stack.pop()
+            component.append((cx, cy))
+            for dx in (-1, 0, 1):
+                for dy2 in (-1, 0, 1):
+                    neighbor = (cx + dx, cy + dy2)
+                    if neighbor in drawn and neighbor not in visited:
+                        visited.add(neighbor)
+                        stack.append(neighbor)
+        if len(component) > len(largest):
+            largest = component
+    keep = set(largest)
+    for (x, y) in drawn:
+        if (x, y) not in keep:
+            fp[x, y] = cp[x, y]
+
+    # --- Water: traveling sparkle over the blue highlights. The temporal term
+    # advances exactly one cycle across the loop (integer multiple of phase) so
+    # the shimmer loops seamlessly instead of jumping at the wrap. ---
     x0, y0, x1, y1 = WATER_BOX
     for y in range(y0, y1):
         for x in range(x0, x1):
             r, g, b, a = cp[x, y]
             if not is_water(r, g, b):
                 continue
-            wave = math.sin(x * 0.16 + y * 0.11 - phase * 1.3)
+            wave = math.sin(x * 0.16 + y * 0.11 - phase)
             if b > 150 and wave > 0.55:  # bright reflections glint brighter
                 fp[x, y] = (min(255, r + 26), min(255, g + 28), min(255, b + 24), a)
             elif wave < -0.72:  # troughs dip slightly
