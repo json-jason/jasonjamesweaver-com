@@ -139,15 +139,18 @@ const WORLDS: World[] = [
   },
 ];
 
-const TITLE_SCENE_FRAMES = [
-  "/images/nes/title-scene/frames/title-frame-0.webp",
-  "/images/nes/title-scene/frames/title-frame-1.webp",
-  "/images/nes/title-scene/frames/title-frame-2.webp",
+const TITLE_SWORD_SEQUENCE = [
+  "/images/nes/title-scene/sword-raise/sword-raise-0.webp",
+  "/images/nes/title-scene/sword-raise/sword-raise-1.webp",
+  "/images/nes/title-scene/sword-raise/sword-raise-2.webp",
+  "/images/nes/title-scene/sword-raise/sword-raise-3.webp",
+  "/images/nes/title-scene/sword-raise/sword-raise-4.webp",
+  "/images/nes/title-scene/sword-raise/sword-raise-5.webp",
 ] as const;
 
-// The long hold keeps the scene calm; the brief scene changes read as ambient
-// cloud light and a sword glint rather than constant busy motion.
-const TITLE_SCENE_FRAME_DURATIONS = [1250, 180, 620] as const;
+// The sequence is deliberately short: a clear raise, a readable flash, then
+// entrance to the world. It is not ambient background motion.
+const TITLE_SWORD_FRAME_DURATIONS = [120, 190, 190, 220, 180, 360] as const;
 
 function PixelLink({ href, children, variant = "gold" }: { href: string; children: React.ReactNode; variant?: "gold" | "blue" }) {
   const variantClass =
@@ -178,81 +181,74 @@ function PixelAction({ href, children, onNavigate }: { href: string; children: R
 }
 
 function StartScreen({ onStart }: { onStart: () => void }) {
-  const [sceneFrame, setSceneFrame] = useState(0);
+  const [sequenceFrame, setSequenceFrame] = useState<number | null>(null);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const isEntering = sequenceFrame !== null;
 
   useEffect(() => {
     const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const preloadedFrames = TITLE_SCENE_FRAMES.slice(1).map((src) => {
+    const syncMotionPreference = () => setReducedMotion(motionPreference.matches);
+    syncMotionPreference();
+    motionPreference.addEventListener("change", syncMotionPreference);
+    return () => motionPreference.removeEventListener("change", syncMotionPreference);
+  }, []);
+
+  useEffect(() => {
+    const preloadedFrames = TITLE_SWORD_SEQUENCE.map((src) => {
       const image = new Image();
       image.src = src;
       return image;
     });
-    let currentFrame = 0;
-    let timer: number | undefined;
-
-    function stopAnimation() {
-      if (timer !== undefined) {
-        window.clearTimeout(timer);
-        timer = undefined;
-      }
-    }
-
-    function advanceFrame() {
-      currentFrame = (currentFrame + 1) % TITLE_SCENE_FRAMES.length;
-      setSceneFrame(currentFrame);
-      timer = window.setTimeout(advanceFrame, TITLE_SCENE_FRAME_DURATIONS[currentFrame]);
-    }
-
-    function syncMotionPreference() {
-      stopAnimation();
-      currentFrame = 0;
-      setSceneFrame(0);
-      if (!motionPreference.matches) {
-        timer = window.setTimeout(advanceFrame, TITLE_SCENE_FRAME_DURATIONS[0]);
-      }
-    }
-
-    syncMotionPreference();
-    motionPreference.addEventListener("change", syncMotionPreference);
-    return () => {
-      stopAnimation();
-      motionPreference.removeEventListener("change", syncMotionPreference);
-      void preloadedFrames;
-    };
+    return () => void preloadedFrames;
   }, []);
 
   useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
+    if (sequenceFrame === null) return;
+    const timer = window.setTimeout(() => {
+      if (sequenceFrame === TITLE_SWORD_SEQUENCE.length - 1) {
         onStart();
+        return;
       }
-    }
+      setSequenceFrame(sequenceFrame + 1);
+    }, TITLE_SWORD_FRAME_DURATIONS[sequenceFrame]);
+    return () => window.clearTimeout(timer);
+  }, [onStart, sequenceFrame]);
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onStart]);
+  function enterWorld() {
+    if (isEntering) return;
+    if (reducedMotion) {
+      onStart();
+      return;
+    }
+    setSequenceFrame(0);
+  }
+
+  const source = sequenceFrame === null ? "/images/nes/title-screen.png" : TITLE_SWORD_SEQUENCE[sequenceFrame];
 
   return (
     <button
       type="button"
-      onClick={onStart}
-      className="group relative flex min-h-[100dvh] w-full cursor-pointer items-center justify-center overflow-hidden bg-[#050816] px-4 py-10 text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-[#f6d365]"
-      aria-label="Press Enter or click to start the website"
+      onClick={enterWorld}
+      disabled={isEntering}
+      className="group relative flex min-h-[100dvh] w-full cursor-pointer items-center justify-center overflow-hidden bg-[#050816] px-4 py-10 text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-[#f6d365] disabled:cursor-wait"
+      aria-label={isEntering ? "Jason raises his sword" : "Press Enter or click to start the website"}
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(56,110,180,0.35),transparent_42%),linear-gradient(180deg,#060a18,#03040a)]" />
       <div className="relative z-10 w-full max-w-6xl">
         <div className="relative mx-auto aspect-[4/3] w-[min(100%,calc((100dvh-5rem)*4/3))] overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
           <img
-            src={TITLE_SCENE_FRAMES[sceneFrame]}
+            src={source}
             alt="WEAVER NES title screen with Jason's hero sprite facing a distant castle"
             className="h-full w-full object-cover pixel-art"
           />
           <div className="absolute inset-x-0 bottom-[5.5%] text-center">
-            <p className="press-start-text press-start-flash text-3xl leading-none text-white md:text-[3.35rem]">
+            <p className={`press-start-text text-3xl leading-none text-white md:text-[3.35rem] ${isEntering ? "opacity-0" : "press-start-flash"}`}>
               PRESS START
             </p>
           </div>
+          <p className="sr-only" aria-live="polite">
+            {isEntering ? "Jason raises his sword." : ""}
+          </p>
         </div>
       </div>
     </button>
