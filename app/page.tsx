@@ -140,17 +140,17 @@ const WORLDS: World[] = [
 ];
 
 const TITLE_SWORD_SEQUENCE = [
-  "/images/nes/title-scene/sword-raise/sword-raise-0.webp",
-  "/images/nes/title-scene/sword-raise/sword-raise-1.webp",
-  "/images/nes/title-scene/sword-raise/sword-raise-2.webp",
-  "/images/nes/title-scene/sword-raise/sword-raise-3.webp",
-  "/images/nes/title-scene/sword-raise/sword-raise-4.webp",
-  "/images/nes/title-scene/sword-raise/sword-raise-5.webp",
+  "/images/nes/title-scene/sword-raise/sword-raise-0.webp", // sword lowered
+  "/images/nes/title-scene/sword-raise/raise-mid-1.webp", // low raise
+  "/images/nes/title-scene/sword-raise/raise-mid-2.webp", // high raise
+  "/images/nes/title-scene/sword-raise/sword-raise-2.webp", // apex
+  "/images/nes/title-scene/sword-raise/sword-raise-4.webp", // apex + gleam
+  "/images/nes/title-scene/sword-raise/sword-raise-5.webp", // apex + full gleam (held)
 ] as const;
 
-// A clear raise, a readable gleam, then a held beat on the fully-raised,
-// gleaming sword (~1s) before entering the world. Per-frame milliseconds.
-const TITLE_SWORD_FRAME_DURATIONS = [120, 190, 190, 220, 180, 1000] as const;
+// A quick raise (down → low → high → apex), a readable gleam, then a held beat
+// on the fully-raised, gleaming sword (~1s) before entering. Per-frame ms.
+const TITLE_SWORD_FRAME_DURATIONS = [130, 130, 130, 150, 130, 1000] as const;
 
 function PixelLink({ href, children, variant = "gold" }: { href: string; children: React.ReactNode; variant?: "gold" | "blue" }) {
   const variantClass =
