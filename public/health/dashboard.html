@@ -256,9 +256,9 @@ async function hashPW(pw) {
   return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
-// SET YOUR PASSWORD HERE — run hashPW('yourpassword') in browser console
-// or replace this with the output of: echo -n 'yourpassword' | shasum -a 256
-const PASSWORD_HASH = '6305c53f64db3e012c057bbf9e4b78ba64500fc1feaefab7f7d0b31e461a42ae';
+// Public access intentionally enabled by the site owner on 2026-08-08.
+// Use real server-side authentication before storing additional sensitive data here.
+const PASSWORD_HASH = '';
 
 async function unlock() {
   const input = document.getElementById('pwInput').value;
