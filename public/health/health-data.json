@@ -95,6 +95,12 @@
         "idealTiming": "Morning or first meal with fat-containing food"
       },
       {
+        "name": "NatureWise Vitamin D3 + K2 (MK-7)",
+        "dose": "Vitamin D3 1,000 IU + vitamin K2 MK-7 100 mcg",
+        "purpose": "Replacement for Momentous vitamin D; vitamin-D maintenance and bone/nutrient support. K2 is not a treatment for coronary calcium or plaque.",
+        "idealTiming": "First meal with food; obtain clinician guidance before use with warfarin/Coumadin or another vitamin-K-sensitive anticoagulant"
+      },
+      {
         "name": "Ashwagandha",
         "dose": "600 mg",
         "purpose": "Stress/anxiety resilience support",
