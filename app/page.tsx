@@ -16,6 +16,17 @@ type Hotspot = {
   description: string;
 };
 
+type BookEntry = {
+  title: string;
+  author: string;
+  note: string;
+};
+
+type BookSection = {
+  heading: string;
+  books: BookEntry[];
+};
+
 type World = {
   id: ScreenId;
   title: string;
@@ -23,7 +34,8 @@ type World = {
   alt: string;
   panelPosition: string;
   body: string;
-  items: string[];
+  items?: string[];
+  sections?: BookSection[];
 };
 
 const MAP_HOTSPOTS: Hotspot[] = [
@@ -125,8 +137,94 @@ const WORLDS: World[] = [
     image: "/images/nes/library.webp",
     alt: "Pixel art library shelves for the library section",
     panelPosition: "md:bottom-8 md:left-8",
-    body: "A curated inventory of books, tools, people, and media that sharpen judgment, creativity, systems thinking, and health.",
-    items: ["Books", "Tools", "People", "Media"],
+    body: "Books worth your time, organized by what they're good for. Tools, people, and media are coming soon.",
+    sections: [
+      {
+        heading: "Personal Growth / Philosophy",
+        books: [
+          {
+            title: "A New Earth",
+            author: "Eckhart Tolle",
+            note: "Helps you recognize the ego's influence and become more present in everyday life.",
+          },
+          {
+            title: "The Art of Happiness",
+            author: "Dalai Lama & Howard C. Cutler",
+            note: "Shows that happiness is a skill that can be intentionally cultivated.",
+          },
+          {
+            title: "Radical Acceptance",
+            author: "Tara Brach",
+            note: "Teaches that genuine change begins with self-acceptance rather than self-criticism.",
+          },
+          {
+            title: "You Are Here",
+            author: "Thich Nhat Hanh",
+            note: "A gentle introduction to mindfulness and fully experiencing the present moment.",
+          },
+          {
+            title: "Four Thousand Weeks",
+            author: "Oliver Burkeman",
+            note: "Reframes productivity by embracing the reality that your time is finite.",
+          },
+          {
+            title: "The Big Leap",
+            author: "Gay Hendricks",
+            note: "Explores why we sabotage ourselves just as life starts going well, and how to stop.",
+          },
+          {
+            title: "The Mountain Is You",
+            author: "Brianna Wiest",
+            note: "Turns self-sabotage into a practical roadmap for personal growth and emotional maturity.",
+          },
+        ],
+      },
+      {
+        heading: "Business / Entrepreneurship",
+        books: [
+          {
+            title: "Anything You Want",
+            author: "Derek Sivers",
+            note: "A short, inspiring blueprint for building a business around freedom, purpose, and simplicity.",
+          },
+          {
+            title: "Rework",
+            author: "Jason Fried & David Heinemeier Hansson",
+            note: "Challenges conventional business wisdom with practical advice for doing more with less.",
+          },
+          {
+            title: "The ONE Thing",
+            author: "Gary Keller & Jay Papasan",
+            note: "Reinforces the power of relentless focus, even if the audiobook is more repetitive than necessary.",
+          },
+        ],
+      },
+      {
+        heading: "Resilience",
+        books: [
+          {
+            title: "Iron Hope",
+            author: "James Lawrence",
+            note: "A reminder that extraordinary achievements are built through grit, consistency, and refusing to quit.",
+          },
+        ],
+      },
+      {
+        heading: "Memoir / Travel / Culture",
+        books: [
+          {
+            title: "Travels with Charley",
+            author: "John Steinbeck",
+            note: "A thoughtful journey across America that reveals as much about people and place as it does about the author.",
+          },
+          {
+            title: "Extra Virginity",
+            author: "Tom Mueller",
+            note: "An eye-opening look at olive oil, food fraud, craftsmanship, and why quality matters.",
+          },
+        ],
+      },
+    ],
   },
   {
     id: "contact",
@@ -367,22 +465,49 @@ function WorldScreen({ world, onBack }: { world: World; onBack: () => void }) {
   return (
     <section className="screen-stage bg-[#050816] px-4 py-5 md:px-8 md:py-8">
       <div className="screen-transition mx-auto flex min-h-[calc(100dvh-2.5rem)] max-w-7xl items-center md:min-h-[calc(100dvh-4rem)]">
-        <div className="relative mx-auto aspect-[4/3] w-[min(100%,calc((100dvh-2.5rem)*4/3))] overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
-          <img src={world.image} alt={world.alt} className="block h-full w-full object-cover pixel-art" loading="lazy" decoding="async" />
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_35%,rgba(3,4,10,0.72)_100%)] md:bg-[radial-gradient(circle_at_78%_78%,rgba(3,4,10,0.76),transparent_44%),linear-gradient(180deg,transparent_45%,rgba(3,4,10,0.45)_100%)]" />
+        <div className="relative mx-auto w-[min(100%,calc((100dvh-2.5rem)*4/3))] border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
+          <div className="relative aspect-[4/3] w-full overflow-hidden">
+            <img src={world.image} alt={world.alt} className="block h-full w-full object-cover pixel-art" loading="lazy" decoding="async" />
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_35%,rgba(3,4,10,0.72)_100%)] md:bg-[radial-gradient(circle_at_78%_78%,rgba(3,4,10,0.76),transparent_44%),linear-gradient(180deg,transparent_45%,rgba(3,4,10,0.45)_100%)]" />
+          </div>
 
           <div className={`relative z-10 md:absolute ${world.panelPosition} md:w-[min(43rem,48%)]`}>
             <div className="nes-panel border-t-4 border-[#f8f4d8] bg-[#07101f]/95 p-5 text-[#fff8d8] shadow-[0_-4px_0_#101828] md:border-4 md:p-7 md:shadow-[0_0_0_4px_#101828,0_16px_0_rgba(0,0,0,0.35)]">
               <h2 className="pixel-heading mb-4 text-3xl leading-tight text-white md:text-5xl">{world.title}</h2>
               <p className="mb-5 max-w-[64ch] text-base leading-7 text-[#f4e7bd] md:text-lg">{world.body}</p>
-              <ul className="mb-6 grid gap-2 text-sm leading-6 text-[#d9e8ff] md:text-base">
-                {world.items.map((item) => (
-                  <li key={item} className="flex gap-3">
-                    <span className="text-[#f6d365]">&gt;</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
+              {world.sections ? (
+                <div className="pixel-scroll mb-6 max-h-[38vh] overflow-y-auto pr-2">
+                  {world.sections.map((section) => (
+                    <div key={section.heading} className="mb-4 last:mb-0">
+                      <p className="pixel-heading mb-2 text-xs tracking-[0.1em] text-[#f6d365] md:text-sm">
+                        {section.heading}
+                      </p>
+                      <ul className="grid gap-3 text-sm leading-6 text-[#d9e8ff] md:text-base">
+                        {section.books.map((book) => (
+                          <li key={book.title} className="flex gap-3">
+                            <span className="text-[#f6d365]">&gt;</span>
+                            <span>
+                              <span className="font-semibold text-white">{book.title}</span>
+                              <span className="text-[#c5d9ff]"> — {book.author}</span>
+                              <br />
+                              <span className="text-xs text-[#a9bde3] md:text-sm">{book.note}</span>
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              ) : world.items ? (
+                <ul className="mb-6 grid gap-2 text-sm leading-6 text-[#d9e8ff] md:text-base">
+                  {world.items.map((item) => (
+                    <li key={item} className="flex gap-3">
+                      <span className="text-[#f6d365]">&gt;</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
               {world.id === "contact" ? (
                 <div className="mb-6 flex flex-wrap gap-3">
                   <PixelLink href="mailto:emailweaver@gmail.com">EMAIL</PixelLink>
