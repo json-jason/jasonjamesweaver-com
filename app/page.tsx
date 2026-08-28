@@ -274,6 +274,12 @@ const TITLE_AMBIENT_SEQUENCE = [
 ] as const;
 const TITLE_AMBIENT_FRAME_MS = 170;
 
+// Baked bottom band (prompt + credit), authored by scripts/build_title_prompt_band.py
+// at the artwork's native 1448px width. Compositing it as one more `pixel-art`
+// layer keeps the type on the same pixel grid as the scene frames at every
+// viewport, which DOM text over pixel art can never be.
+const TITLE_PROMPT_BAND = "/images/nes/title-scene/prompt-band/prompt-band.webp";
+
 function PixelLink({ href, children, variant = "gold" }: { href: string; children: React.ReactNode; variant?: "gold" | "blue" }) {
   const variantClass =
     variant === "gold"
@@ -366,10 +372,19 @@ function StartScreen({ onStart }: { onStart: () => void }) {
       type="button"
       onClick={enterWorld}
       disabled={isEntering}
-      className="group relative flex min-h-[100dvh] w-full cursor-pointer items-center justify-center overflow-hidden bg-[#050816] px-4 py-10 text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-[#f6d365] disabled:cursor-wait"
+      className="group relative flex min-h-[100dvh] w-full cursor-pointer items-center justify-center overflow-hidden bg-[#050816] px-0 py-10 text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-[#f6d365] disabled:cursor-wait sm:px-4"
       aria-label={isEntering ? "Jason raises his sword" : "Press Enter or click to start the website"}
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(56,110,180,0.35),transparent_42%),linear-gradient(180deg,#060a18,#03040a)]" />
+      {/* Surround light, anchored to the artwork rather than to the viewport.
+          The frame is centred in this box (items-center + mx-auto), so
+          `at 50% 50%` is the frame's own centre: the light radiates out of the
+          picture and falls off symmetrically above and below it. The old
+          `at 50% 20%` put the brightest thing on a phone screen ~120px above
+          the frame and left the bottom third of the viewport dead black, while
+          on desktop its whole radius sat behind the opaque frame and did
+          nothing at all. The base gradient is symmetric about the same
+          centreline so the two halves of the surround match. */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_62%_at_50%_50%,rgba(56,110,180,0.38),rgba(45,86,142,0.20)_45%,rgba(56,110,180,0)_100%),linear-gradient(180deg,#03040a,#070c1c_50%,#03040a)]" />
       <div className="relative z-10 w-full max-w-6xl">
         <div className="relative mx-auto aspect-[4/3] w-[min(100%,calc((100dvh-5rem)*4/3))] overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
           {/* Ambient title loop (before start): waving flag + shimmering river.
@@ -399,11 +414,18 @@ function StartScreen({ onStart }: { onStart: () => void }) {
               decoding="async"
             />
           ))}
-          <div className="absolute inset-x-0 bottom-[5.5%] text-center">
-            <p className={`press-start-text text-3xl leading-none text-white md:text-[3.35rem] ${isEntering ? "opacity-0" : "press-start-flash"}`}>
-              PRESS START
-            </p>
-          </div>
+          {/* Prompt + credit band, stacked last so it sits above every scene
+              frame. Static by design: it is part of the composition, not an
+              overlay, so it stays put through the sword sequence. The button
+              supplies the accessible name, so this layer is decorative. */}
+          <img
+            src={TITLE_PROMPT_BAND}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-auto w-full pixel-art"
+            fetchPriority="high"
+            decoding="async"
+          />
           <p className="sr-only" aria-live="polite">
             {isEntering ? "Jason raises his sword." : ""}
           </p>
