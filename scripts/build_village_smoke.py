@@ -53,12 +53,20 @@ FIELD_H = 1086
 # tones keeps the hard pixel edges and gives the ragged outline for free.
 #
 # The texture repeats NOISE_CYCLES times over the plume's height and scrolls
-# exactly one of those per loop. That is what lets the loop be short while
-# the smoke is slow: the pattern only travels half the plume per cycle, so a
-# wisp takes two full loops - about seventeen seconds - to climb and vanish.
+# exactly one of those per loop. That is what lets the loop stay short while
+# the smoke is very slow: the pattern travels a seventh of the plume per
+# cycle, so a wisp takes about a minute to climb from the chimney and vanish.
+#
+# The count also decides whether the column pulses, which is the thing that
+# kept looking wrong. The noise does not average out over the plume unless
+# plenty of cycles fit inside it - with two and a half, the odd half swung
+# the whole column's area by 11% once per loop, and the eye reads that as
+# every puff swelling at the same moment. Seven brings it to 2.3%, which is
+# below noticing. Measured, not guessed: build the frames and count the
+# opaque pixels per frame.
 FRAMES = 30
 FRAME_MS = 280
-NOISE_CYCLES = 2.5
+NOISE_CYCLES = 7.0
 
 # Smoke is drawn from three flat tones, no blending between them. Anti-aliased
 # circles would read as a modern soft brush dropped onto pixel art, so each
@@ -109,9 +117,9 @@ def noise(u: float, v: float) -> float:
     # smoke. Keeping them near the vertical rate makes the cells roughly
     # round, so the column billows.
     return (
-        0.55 * math.sin(2 * math.pi * (v + 0.34 * u))
-        + 0.28 * math.sin(2 * math.pi * (2 * v - 0.58 * u) + 1.3)
-        + 0.17 * math.sin(2 * math.pi * (3 * v + 0.91 * u) + 2.7)
+        0.55 * math.sin(2 * math.pi * (v + 0.72 * u))
+        + 0.28 * math.sin(2 * math.pi * (2 * v - 1.25 * u) + 1.3)
+        + 0.17 * math.sin(2 * math.pi * (3 * v + 1.90 * u) + 2.7)
     )
 
 
