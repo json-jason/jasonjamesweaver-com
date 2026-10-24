@@ -93,7 +93,7 @@ const MAP_HOTSPOTS: Hotspot[] = [
     y: 39,
     w: 18,
     h: 39,
-    description: "Books, tools, people, media, and useful references.",
+    description: "Books that shaped how I think, lead, and work.",
   },
   {
     id: "contact",
@@ -153,7 +153,7 @@ const WORLDS: World[] = [
     image: "/images/nes/library.webp",
     alt: "Pixel art library shelves for the library section",
     panelPosition: "md:bottom-8 md:left-8",
-    body: "Books worth your time, organized by what they're good for. Tools, people, and media are coming soon.",
+    body: "Books worth your time, organized by what they're good for.",
     sections: LIBRARY_SECTIONS,
   },
   {
@@ -555,7 +555,13 @@ function MapHub({ onSelect }: { onSelect: (screen: ScreenId) => void }) {
             <AmbientGlowLayer key={glow.name} glow={glow} />
           ))}
 
-          {MAP_HOTSPOTS.map((spot) => (
+          {MAP_HOTSPOTS.map((spot) => {
+            // Centred tooltips under buildings near the map's edge get clipped
+            // by the frame, so those anchor to the building's outer side.
+            const centre = spot.x + spot.w / 2;
+            const tooltipAnchor =
+              centre < 25 ? "left-0" : centre > 75 ? "right-0" : "left-1/2 -translate-x-1/2";
+            return (
             <button
               type="button"
               key={spot.id}
@@ -564,12 +570,13 @@ function MapHub({ onSelect }: { onSelect: (screen: ScreenId) => void }) {
               className="group absolute rounded-sm outline-none transition-all duration-150 focus-visible:ring-2 focus-visible:ring-[#f8f4d8]/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050816]"
               style={{ left: `${spot.x}%`, top: `${spot.y}%`, width: `${spot.w}%`, height: `${spot.h}%` }}
             >
-              <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-3 w-56 -translate-x-1/2 border-4 border-[#f8f4d8] bg-[#07101f]/95 p-3 text-left opacity-0 shadow-[0_0_0_3px_#101828,0_10px_0_rgba(0,0,0,0.35)] transition group-hover:opacity-100 group-focus-visible:opacity-100 md:w-72">
+              <span className={`pointer-events-none absolute ${tooltipAnchor} top-full z-20 mt-3 w-56 border-4 border-[#f8f4d8] bg-[#07101f]/95 p-3 text-left opacity-0 shadow-[0_0_0_3px_#101828,0_10px_0_rgba(0,0,0,0.35)] transition group-hover:opacity-100 group-focus-visible:opacity-100 md:w-72`}>
                 <span className="pixel-heading mb-2 block text-lg leading-none text-[#f6d365] md:text-2xl">{spot.title}</span>
                 <span className="block text-xs leading-5 text-[#d9e8ff] md:text-sm">{spot.description}</span>
               </span>
             </button>
-          ))}
+            );
+          })}
         </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:hidden">
