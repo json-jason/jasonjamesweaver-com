@@ -4,7 +4,7 @@
       "name": "cloud-0",
       "seconds": 92,
       "box": {
-        "left": "69.7514%",
+        "left": "69.0608%",
         "top": "3.6832%",
         "width": "23.6878%",
         "height": "14.0884%"
@@ -12,70 +12,70 @@
     },
     {
       "name": "cloud-1",
-      "seconds": 88,
+      "seconds": 94,
       "box": {
-        "left": "10.3591%",
-        "top": "8.4715%",
+        "left": "8.2873%",
+        "top": "1.8416%",
         "width": "24.5856%",
         "height": "15.5617%"
       }
     },
     {
       "name": "cloud-2",
-      "seconds": 82,
+      "seconds": 84,
       "box": {
         "left": "38.6740%",
-        "top": "13.8122%",
+        "top": "11.9705%",
         "width": "21.8232%",
         "height": "13.1676%"
       }
     },
     {
       "name": "cloud-3",
-      "seconds": 77,
+      "seconds": 85,
       "box": {
-        "left": "81.4917%",
-        "top": "19.3370%",
+        "left": "79.4199%",
+        "top": "11.0497%",
         "width": "16.2293%",
         "height": "11.6943%"
       }
     },
     {
       "name": "cloud-4",
-      "seconds": 73,
+      "seconds": 76,
       "box": {
-        "left": "20.7182%",
-        "top": "23.0203%",
+        "left": "22.7901%",
+        "top": "19.7974%",
         "width": "16.3674%",
         "height": "11.9705%"
       }
     },
     {
       "name": "cloud-5",
-      "seconds": 68,
+      "seconds": 69,
       "box": {
-        "left": "54.5580%",
-        "top": "27.6243%",
+        "left": "55.2486%",
+        "top": "26.7035%",
         "width": "15.4696%",
         "height": "11.0497%"
       }
     },
     {
       "name": "cloud-6",
-      "seconds": 64,
+      "seconds": 87,
       "box": {
-        "left": "84.9448%",
-        "top": "32.2284%",
+        "left": "29.6961%",
+        "top": "8.7477%",
         "width": "12.5691%",
         "height": "10.3131%"
       }
     },
     {
       "name": "cloud-7",
-      "seconds": 60,
+      "seconds": 82,
       "box": {
-        "left": "4.1436%",
-        "top": "36.0958%",
+        "left": "62.1547%",
+        "top": "13.8122%",
         "width": "15.8149%",
         "height": "10.8656%"
       }
@@ -84,8 +84,8 @@
   "smoke": [
     {
       "name": "smoke-left",
-      "frames": 16,
-      "frameMs": 110,
+      "frames": 26,
+      "frameMs": 195,
       "box": {
         "left": "4.8343%",
         "top": "0.0000%",
@@ -94,9 +94,20 @@
       }
     },
     {
+      "name": "smoke-jjw",
+      "frames": 26,
+      "frameMs": 195,
+      "box": {
+        "left": "34.5304%",
+        "top": "8.5635%",
+        "width": "8.0110%",
+        "height": "25.0460%"
+      }
+    },
+    {
       "name": "smoke-right",
-      "frames": 16,
-      "frameMs": 110,
+      "frames": 26,
+      "frameMs": 195,
       "box": {
         "left": "80.1796%",
         "top": "0.0000%",

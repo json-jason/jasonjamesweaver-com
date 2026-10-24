@@ -46,15 +46,21 @@ FASTEST = 48
 # (sprite, left, top) in field pixels. Spread across the sky at varying
 # heights, with the biggest clouds kept high so they do not crowd the castle.
 PLACEMENTS = [
-    ("cloud-0", 1010, 40),
-    ("cloud-1", 150, 92),
-    ("cloud-2", 560, 150),
-    ("cloud-3", 1180, 210),
-    ("cloud-4", 300, 250),
-    ("cloud-5", 790, 300),
-    ("cloud-6", 1230, 350),
-    ("cloud-7", 60, 392),
+    ("cloud-0", 1000, 40),
+    ("cloud-1", 120, 20),
+    ("cloud-2", 560, 130),
+    ("cloud-3", 1150, 120),
+    ("cloud-4", 330, 215),
+    ("cloud-5", 800, 290),
+    ("cloud-6", 430, 95),
+    ("cloud-7", 900, 150),
 ]
+
+# Where the village stands in front of the clouds, and how far down that
+# cover reaches. Must match build_village_foreground.py: a cloud that hangs
+# below the cut in one of these columns would be drawn on top of a roof.
+FRONT_ZONES = ((0, 545), (1150, FIELD_W))
+FRONT_COVER_TO = 470
 
 
 def main() -> None:
@@ -68,6 +74,15 @@ def main() -> None:
 
         if left + w > FIELD_W or top + h > FIELD_H:
             raise SystemExit(f"{name} at ({left},{top}) runs off the picture")
+
+        # A cloud drifts a full width, so it passes through every column at
+        # some point. If it hangs below where the rooftop cover stops, it
+        # will slide out over a roof on its way past.
+        if top + h > FRONT_COVER_TO:
+            raise SystemExit(
+                f"{name} reaches y={top + h}, below the rooftop cover at {FRONT_COVER_TO}; "
+                "raise the cloud or lower SKY_BAND in build_village_foreground.py"
+            )
 
         depth = min(1.0, top / SKY_DEPTH)
         seconds = round(SLOWEST - (SLOWEST - FASTEST) * depth)

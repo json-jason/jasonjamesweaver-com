@@ -261,6 +261,13 @@ type DriftingCloud = {
 };
 
 const VILLAGE_CLOUDS = villageSky.clouds as DriftingCloud[];
+
+// The village's rooftops, cut out of the painting by
+// scripts/build_village_foreground.py and laid back over the clouds so the
+// clouds pass behind them. The middle of the picture is deliberately not in
+// it: the castle and its hills stay behind the weather, so a cloud drifts
+// across them.
+const VILLAGE_FOREGROUND = "/images/nes/village-scene/foreground.webp";
 const VILLAGE_SMOKE = villageSky.smoke as AmbientGlow[];
 
 function DriftingCloudLayer({ cloud }: { cloud: DriftingCloud }) {
@@ -513,6 +520,18 @@ function MapHub({ onSelect }: { onSelect: (screen: ScreenId) => void }) {
           {VILLAGE_CLOUDS.map((cloud) => (
             <DriftingCloudLayer key={cloud.name} cloud={cloud} />
           ))}
+
+          {/* Rooftops back on top, so the clouds drift behind the village but
+              still in front of the castle. Anchored to the top of the frame
+              rather than stretched over it: the cut only covers the sky band,
+              and below that the painting already shows through. */}
+          <img
+            src={VILLAGE_FOREGROUND}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 top-0 h-auto w-full pixel-art"
+            decoding="async"
+          />
 
           {/* Then the things that stay put but move in place: smoke leaving
               the two chimneys, the forge fire, the two door lanterns. All

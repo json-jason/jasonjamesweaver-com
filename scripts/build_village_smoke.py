@@ -33,9 +33,14 @@ MANIFEST = ROOT / "app/data/village-sky.json"
 FIELD_W = 1448
 FIELD_H = 1086
 
-FRAMES = 16
-PUFFS = 4
-FRAME_MS = 110
+# Smoke rises slowly. The first attempt ran a puff's whole life in under two
+# seconds, which read as steam escaping a kettle under pressure rather than a
+# hearth ticking over. A puff now takes about five seconds to leave the
+# chimney and fade, and the extra frames keep that slow climb smooth instead
+# of stepping visibly.
+FRAMES = 26
+PUFFS = 5
+FRAME_MS = 195
 
 # Smoke is drawn from three flat tones, no blending between them. Anti-aliased
 # circles would read as a modern soft brush dropped onto pixel art, so each
@@ -64,8 +69,11 @@ CHIMNEYS = [
     # The thatched house on the left. Its smoke has the most room, so it is
     # the one that really reads: it climbs clear of the roofline and leaves.
     Chimney("left", mouth_x=96, mouth_y=156, drift=86, travel=168, lean=0.25),
-    # The blacksmith on the right. Leaning the other way keeps the two from
-    # looking like one effect pasted twice.
+    # The JJW house. Its chimney tops out at y=355, lower than the other two,
+    # so its smoke has the shortest run before it is gone.
+    Chimney("jjw", mouth_x=526, mouth_y=355, drift=64, travel=236, lean=0.28),
+    # The blacksmith on the right. Leaning the other way keeps the three from
+    # looking like one effect pasted three times.
     Chimney("right", mouth_x=1261, mouth_y=262, drift=-74, travel=252, lean=0.30),
 ]
 

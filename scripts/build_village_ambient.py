@@ -71,14 +71,16 @@ REGIONS = [
     # vertical term so the light runs up the flames instead of the whole fire
     # breathing as one lump.
     Region("forge", (1240, 660, 1350, 790), frame_ms=110, swing=0.22, lick=0.55, seed=0.0),
-    # The big lantern by the library door. The redrawn artwork made it three
-    # times the size it used to be, so a gentle pulse now actually reads -
-    # the old version was too small for anything but a flicker nobody saw.
-    Region("library", (34, 665, 104, 795), frame_ms=210, swing=0.13, lick=0.16, seed=1.7),
+    # The big lantern by the library door. There is a real flame behind that
+    # glass, so it gets the forge's treatment rather than a gentle swell: a
+    # wide swing and a strong vertical term, so the light jumps and climbs
+    # instead of breathing. A shade slower than the forge, because a lantern
+    # is a small flame in a box and a forge is not.
+    Region("library", (34, 665, 104, 795), frame_ms=135, swing=0.20, lick=0.50, seed=1.7),
     # The matching lantern at the JJW house, taken together with the lit
-    # window beside it so both warm up and settle as one. Slower again, and
-    # off both other beats, so the three lights never pulse in step.
-    Region("jjw", (396, 648, 500, 742), frame_ms=250, swing=0.12, lick=0.14, seed=3.4),
+    # window beside it so both jump as one. Different speed and phase again,
+    # so the three flames never flicker in step.
+    Region("jjw", (396, 648, 500, 742), frame_ms=155, swing=0.19, lick=0.46, seed=3.4),
 ]
 
 
