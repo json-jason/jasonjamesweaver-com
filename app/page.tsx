@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 
 import { LIBRARY_BOOKS, SHELF_ORDER } from "./data/library";
+import villageGlows from "./data/village-glows.json";
+import villageSky from "./data/village-sky.json";
 
 type ScreenId = "status" | "journey" | "quests" | "library" | "contact";
 type ViewState = "start" | "map" | ScreenId;
@@ -216,6 +218,122 @@ const TITLE_PROMPT_BAND_DIM = "/images/nes/title-scene/prompt-band/prompt-band-d
 // opacity, exactly like the scene frames, rather than filtering type at runtime.
 const TITLE_PROMPT_BLINK_MS = 450;
 
+function usePrefersReducedMotion() {
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncMotionPreference = () => setReducedMotion(motionPreference.matches);
+    syncMotionPreference();
+    motionPreference.addEventListener("change", syncMotionPreference);
+    return () => motionPreference.removeEventListener("change", syncMotionPreference);
+  }, []);
+
+  return reducedMotion;
+}
+
+// Ambient glow loops on the village map. Each one is a small rebuilt patch of
+// the painting rather than a whole new field, so several can run at once for a
+// few KB each. Both the frames and this manifest come out of
+// scripts/build_village_ambient.py in one pass: the patches are measured off
+// the artwork, so their placement has to be written by whatever cut them
+// rather than copied here by hand. `box` is a percentage of the painting,
+// which is exact because the painting and the frame share one 4:3 ratio.
+type AmbientGlow = {
+  name: string;
+  frames: number;
+  frameMs: number;
+  box: { left: string; top: string; width: string; height: string };
+};
+
+// The castle's pennant is in the distance, behind the weather, so it is
+// drawn before the clouds. Everything else that moves in place — the forge,
+// the two door lanterns — is village, and is drawn after the rooftops.
+const ALL_GLOWS = villageGlows as AmbientGlow[];
+const DISTANT_GLOWS = ALL_GLOWS.filter((glow) => glow.name === "flag");
+const VILLAGE_GLOWS = ALL_GLOWS.filter((glow) => glow.name !== "flag");
+
+// The sky's moving parts. The artwork is drawn with an empty sky and empty
+// chimneys on purpose, so nothing has to be cut out of it and nothing has to
+// be painted over: the clouds are sprites laid on top, and the smoke is drawn
+// from scratch. Placements come from scripts/build_village_clouds.py and
+// scripts/build_village_smoke.py. The smoke rides the same frame-loop
+// component as the forge and the lanterns.
+type DriftingCloud = {
+  name: string;
+  seconds: number;
+  box: { left: string; top: string; width: string; height: string };
+};
+
+const VILLAGE_CLOUDS = villageSky.clouds as DriftingCloud[];
+
+// The village's rooftops, cut out of the painting by
+// scripts/build_village_foreground.py and laid back over the clouds so the
+// clouds pass behind them. The middle of the picture is deliberately not in
+// it: the castle and its hills stay behind the weather, so a cloud drifts
+// across them.
+const VILLAGE_FOREGROUND = "/images/nes/village-scene/foreground.webp";
+const VILLAGE_SMOKE = villageSky.smoke as AmbientGlow[];
+
+function DriftingCloudLayer({ cloud }: { cloud: DriftingCloud }) {
+  // Two copies, one painting-width apart, inside a box that slides exactly one
+  // painting width per cycle: as the leading copy leaves on the right its twin
+  // arrives on the left, so the loop has no seam and no snap-back. The slide
+  // is stepped once per artwork pixel rather than run smoothly, which keeps
+  // the cloud on the pixel grid instead of smearing across it.
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+      <div className="cloud-drift absolute inset-0" style={{ animationDuration: `${cloud.seconds}s` }}>
+        <img src={`/images/nes/village-scene/${cloud.name}.webp`} alt="" className="absolute pixel-art" style={cloud.box} decoding="async" />
+        <img
+          src={`/images/nes/village-scene/${cloud.name}.webp`}
+          alt=""
+          className="absolute pixel-art"
+          style={{ ...cloud.box, left: `calc(${cloud.box.left} - 100%)` }}
+          decoding="async"
+        />
+      </div>
+    </div>
+  );
+}
+
+function glowFrameSrc(name: string, index: number) {
+  return `/images/nes/village-scene/${name}-${index}.webp`;
+}
+
+function AmbientGlowLayer({ glow }: { glow: AmbientGlow }) {
+  const [frame, setFrame] = useState(0);
+  const reducedMotion = usePrefersReducedMotion();
+
+  useEffect(() => {
+    if (reducedMotion) return;
+    const timer = window.setInterval(() => {
+      setFrame((current) => (current + 1) % glow.frames);
+    }, glow.frameMs);
+    return () => window.clearInterval(timer);
+  }, [reducedMotion, glow.frames, glow.frameMs]);
+
+  // Every frame is rendered as its own stacked layer and switched by opacity,
+  // the same way the title sequence works: swapping one <img>'s src would show
+  // a blank gap on the first pass through the loop while the next frame
+  // decodes. Frame 0 is the painting's own light, so a visitor who never sees
+  // the loop start sees exactly what was painted.
+  return (
+    <div className="pointer-events-none absolute" style={glow.box} aria-hidden="true">
+      {Array.from({ length: glow.frames }, (_, index) => (
+        <img
+          key={index}
+          src={glowFrameSrc(glow.name, index)}
+          alt=""
+          className="absolute inset-0 h-full w-full pixel-art"
+          style={{ opacity: (reducedMotion ? 0 : frame) === index ? 1 : 0 }}
+          decoding="async"
+        />
+      ))}
+    </div>
+  );
+}
+
 function PixelLink({ href, children, variant = "gold" }: { href: string; children: React.ReactNode; variant?: "gold" | "blue" }) {
   const variantClass =
     variant === "gold"
@@ -248,19 +366,11 @@ function StartScreen({ onStart }: { onStart: () => void }) {
   const [sequenceFrame, setSequenceFrame] = useState<number | null>(null);
   const [ambientFrame, setAmbientFrame] = useState(0);
   const [promptLit, setPromptLit] = useState(true);
-  const [reducedMotion, setReducedMotion] = useState(false);
+  const reducedMotion = usePrefersReducedMotion();
   const isEntering = sequenceFrame !== null;
   // Hold the prompt lit whenever it is not pulsing, so a paused blink always
   // rests on the readable state rather than wherever the timer left it.
   const promptIsLit = promptLit || reducedMotion || isEntering;
-
-  useEffect(() => {
-    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const syncMotionPreference = () => setReducedMotion(motionPreference.matches);
-    syncMotionPreference();
-    motionPreference.addEventListener("change", syncMotionPreference);
-    return () => motionPreference.removeEventListener("change", syncMotionPreference);
-  }, []);
 
   useEffect(() => {
     // Nothing animates under reduced motion, so there is nothing to preload.
@@ -411,6 +521,39 @@ function MapHub({ onSelect }: { onSelect: (screen: ScreenId) => void }) {
 
         <div className="relative mx-auto aspect-[4/3] w-[min(100%,calc((100dvh-12rem)*4/3))] overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
           <img src="/images/nes/village.webp" alt="Interactive pixel art village world map" className="block h-full w-full object-cover pixel-art" decoding="async" />
+
+          {/* Distant movement, under the weather: the castle pennant. A cloud
+              crossing the castle should cross its flag too. */}
+          {DISTANT_GLOWS.map((glow) => (
+            <AmbientGlowLayer key={glow.name} glow={glow} />
+          ))}
+
+          {VILLAGE_CLOUDS.map((cloud) => (
+            <DriftingCloudLayer key={cloud.name} cloud={cloud} />
+          ))}
+
+          {/* Rooftops back on top, so the clouds drift behind the village but
+              still in front of the castle. Anchored to the top of the frame
+              rather than stretched over it: the cut only covers the sky band,
+              and below that the painting already shows through. */}
+          <img
+            src={VILLAGE_FOREGROUND}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 top-0 h-auto w-full pixel-art"
+            decoding="async"
+          />
+
+          {/* Then the things that stay put but move in place: smoke leaving
+              the two chimneys, the forge fire, the two door lanterns. All
+              under the hotspots so their tooltips still win. Decorative —
+              the map's meaning is in the buttons. */}
+          {VILLAGE_SMOKE.map((smoke) => (
+            <AmbientGlowLayer key={smoke.name} glow={smoke} />
+          ))}
+          {VILLAGE_GLOWS.map((glow) => (
+            <AmbientGlowLayer key={glow.name} glow={glow} />
+          ))}
 
           {MAP_HOTSPOTS.map((spot) => (
             <button

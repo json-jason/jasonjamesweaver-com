@@ -1,0 +1,46 @@
+[
+  {
+    "name": "forge",
+    "frames": 6,
+    "frameMs": 110,
+    "box": {
+      "left": "85.6354%",
+      "top": "60.7735%",
+      "width": "7.5967%",
+      "height": "11.9705%"
+    }
+  },
+  {
+    "name": "library",
+    "frames": 6,
+    "frameMs": 135,
+    "box": {
+      "left": "2.3481%",
+      "top": "61.2339%",
+      "width": "4.8343%",
+      "height": "11.9705%"
+    }
+  },
+  {
+    "name": "jjw",
+    "frames": 6,
+    "frameMs": 155,
+    "box": {
+      "left": "27.3481%",
+      "top": "59.6685%",
+      "width": "7.1823%",
+      "height": "8.6556%"
+    }
+  },
+  {
+    "name": "flag",
+    "frames": 10,
+    "frameMs": 115,
+    "box": {
+      "left": "57.0442%",
+      "top": "23.0203%",
+      "width": "5.2486%",
+      "height": "5.7090%"
+    }
+  }
+]
