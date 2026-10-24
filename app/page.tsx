@@ -192,11 +192,6 @@ const WORLDS: World[] = [
             author: "Jason Fried & David Heinemeier Hansson",
             note: "Challenges conventional business wisdom with practical advice for doing more with less.",
           },
-          {
-            title: "The ONE Thing",
-            author: "Gary Keller & Jay Papasan",
-            note: "Reinforces the power of relentless focus, even if the audiobook is more repetitive than necessary.",
-          },
         ],
       },
       {
