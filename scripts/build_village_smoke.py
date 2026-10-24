@@ -1,0 +1,169 @@
+#!/usr/bin/env python3
+"""Author rising chimney smoke for the village map.
+
+The previous artwork had a plume painted into it, so the best that could be
+done was to make that fixed shape billow in place. It read as a frozen plume
+shivering, not as smoke. The artwork now ships with empty chimneys, so the
+smoke can be drawn from nothing and actually leave: puffs are born at the
+chimney mouth, climb, lean away on the wind, swell, thin out and are gone -
+the way smoke is drawn in an old cartoon of a steam engine.
+
+The loop closes because the puffs are evenly spaced in phase and each one's
+opacity is zero at both ends of its life. Puff k is simply puff k-1 one step
+further along, so the last frame hands over to the first with nothing to see.
+
+Outputs:
+  public/images/nes/village-scene/smoke-<name>-*.webp
+  and its placement, appended to app/data/village-sky.json by the caller.
+"""
+
+from __future__ import annotations
+
+import json
+import math
+from pathlib import Path
+
+from PIL import Image, ImageDraw
+
+ROOT = Path(__file__).resolve().parents[1]
+SOURCE = ROOT / "public/images/nes/village.webp"
+OUT = ROOT / "public/images/nes/village-scene"
+MANIFEST = ROOT / "app/data/village-sky.json"
+
+FIELD_W = 1448
+FIELD_H = 1086
+
+FRAMES = 16
+PUFFS = 4
+FRAME_MS = 110
+
+# Smoke is drawn from three flat tones, no blending between them. Anti-aliased
+# circles would read as a modern soft brush dropped onto pixel art, so each
+# puff is built from hard-edged discs and the tones are picked per disc.
+WHITE = (255, 255, 255)
+LIGHT = (226, 230, 238)
+MID = (197, 202, 214)
+
+# Puffs are drawn on a coarser grid than the artwork and scaled up, so every
+# edge lands on a whole block and the curves stair-step the way hand-drawn
+# pixel smoke does.
+BLOCK = 3
+
+
+class Chimney:
+    def __init__(self, name, mouth_x, mouth_y, drift, travel, lean):
+        self.name = name
+        self.mouth_x = mouth_x  # centre of the chimney opening, field pixels
+        self.mouth_y = mouth_y  # the top of the stonework
+        self.drift = drift  # how far the smoke leans by the end of its climb
+        self.travel = travel  # how far it climbs before it is gone
+        self.lean = lean  # start of the sideways drift, 0 = immediately
+
+
+CHIMNEYS = [
+    # The thatched house on the left. Its smoke has the most room, so it is
+    # the one that really reads: it climbs clear of the roofline and leaves.
+    Chimney("left", mouth_x=96, mouth_y=156, drift=86, travel=168, lean=0.25),
+    # The blacksmith on the right. Leaning the other way keeps the two from
+    # looking like one effect pasted twice.
+    Chimney("right", mouth_x=1261, mouth_y=262, drift=-74, travel=252, lean=0.30),
+]
+
+
+def puff_shape(phase: float) -> list[tuple[float, float, float, tuple[int, int, int]]]:
+    """A puff as a few overlapping discs: (dx, dy, radius, colour).
+
+    One disc is a ball, not smoke. Three off-centre discs of different sizes
+    give the lumpy silhouette, and keeping the darkest one low and left
+    suggests the light is coming from the same place as everywhere else in
+    the painting.
+    """
+    grow = 1.0 + phase * 1.9
+    return [
+        (-2.0 * grow, 1.6 * grow, 3.1 * grow, MID),
+        (1.8 * grow, 0.6 * grow, 3.6 * grow, LIGHT),
+        (0.0, -1.4 * grow, 4.2 * grow, WHITE),
+    ]
+
+
+def build(chimney: Chimney, box: tuple[int, int, int, int]) -> list[Image.Image]:
+    x0, y0, x1, y1 = box
+    w, h = x1 - x0, y1 - y0
+    bw, bh = w // BLOCK + 1, h // BLOCK + 1
+
+    frames = []
+    for i in range(FRAMES):
+        coarse = Image.new("RGBA", (bw, bh), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(coarse)
+        for k in range(PUFFS):
+            phase = ((i / FRAMES) + k / PUFFS) % 1.0
+            # Opacity is zero at both ends of a puff's life, so the oldest
+            # puff has vanished exactly as the newest appears and the loop
+            # has no visible join.
+            alpha = math.sin(math.pi * phase) ** 0.7
+            if alpha <= 0.01:
+                continue
+            # The climb eases off: smoke leaves the chimney briskly and slows
+            # as it spreads.
+            climb = phase ** 0.78
+            cx = chimney.mouth_x + chimney.drift * max(0.0, phase - chimney.lean) ** 1.5
+            cy = chimney.mouth_y - chimney.travel * climb
+            # A slow sideways wander on top of the lean, so the column is not
+            # a straight line of identical blobs.
+            cx += math.sin(phase * math.pi * 2.2 + k) * 3.5 * phase
+
+            for dx, dy, radius, colour in puff_shape(phase):
+                px = (cx + dx - x0) / BLOCK
+                py = (cy + dy - y0) / BLOCK
+                r = radius / BLOCK
+                draw.ellipse((px - r, py - r, px + r, py + r), fill=(*colour, round(alpha * 255)))
+
+        frame = coarse.resize((bw * BLOCK, bh * BLOCK), Image.NEAREST).crop((0, 0, w, h))
+        frames.append(frame)
+    return frames
+
+
+def main() -> None:
+    with Image.open(SOURCE) as art:
+        if art.size != (FIELD_W, FIELD_H):
+            raise SystemExit(f"Expected village art at {FIELD_W}x{FIELD_H}, found {art.size}")
+
+    OUT.mkdir(parents=True, exist_ok=True)
+    entries = []
+    for chimney in CHIMNEYS:
+        # The box has to hold every puff at its fattest, including the lean,
+        # or the smoke is clipped by its own sprite.
+        reach = int(abs(chimney.drift)) + 26
+        x0 = max(0, chimney.mouth_x - (reach if chimney.drift < 0 else 26))
+        x1 = min(FIELD_W, chimney.mouth_x + (reach if chimney.drift > 0 else 26))
+        y0 = max(0, chimney.mouth_y - chimney.travel - 26)
+        y1 = min(FIELD_H, chimney.mouth_y + 10)
+        box = (x0, y0, x1, y1)
+
+        frames = build(chimney, box)
+        for i, frame in enumerate(frames):
+            frame.save(OUT / f"smoke-{chimney.name}-{i}.webp", format="WEBP", lossless=True, method=6)
+
+        entries.append(
+            {
+                "name": f"smoke-{chimney.name}",
+                "frames": FRAMES,
+                "frameMs": FRAME_MS,
+                "box": {
+                    "left": f"{x0 / FIELD_W:.4%}",
+                    "top": f"{y0 / FIELD_H:.4%}",
+                    "width": f"{(x1 - x0) / FIELD_W:.4%}",
+                    "height": f"{(y1 - y0) / FIELD_H:.4%}",
+                },
+            }
+        )
+        print(f"smoke-{chimney.name}: {FRAMES} frames of {x1-x0}x{y1-y0} at ({x0},{y0})")
+
+    data = json.loads(MANIFEST.read_text()) if MANIFEST.exists() else {}
+    data["smoke"] = entries
+    MANIFEST.write_text(json.dumps(data, indent=2) + "\n")
+    print(f"wrote {MANIFEST.relative_to(ROOT)}")
+
+
+if __name__ == "__main__":
+    main()

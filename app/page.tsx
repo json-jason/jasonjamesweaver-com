@@ -248,20 +248,20 @@ type AmbientGlow = {
 
 const VILLAGE_GLOWS = villageGlows as AmbientGlow[];
 
-// The sky, taken apart by scripts/build_village_sky.py. The painting still
-// ships unchanged; `skyfill` is a 3KB overlay that puts sky back where the
-// clouds and the plume were painted, and each cloud returns as its own sprite
-// that can be moved. The plume comes back as a frame loop and rides the same
-// component as the forge and the lamps.
+// The sky's moving parts. The artwork is drawn with an empty sky and empty
+// chimneys on purpose, so nothing has to be cut out of it and nothing has to
+// be painted over: the clouds are sprites laid on top, and the smoke is drawn
+// from scratch. Placements come from scripts/build_village_clouds.py and
+// scripts/build_village_smoke.py. The smoke rides the same frame-loop
+// component as the forge and the lanterns.
 type DriftingCloud = {
   name: string;
   seconds: number;
   box: { left: string; top: string; width: string; height: string };
 };
 
-const VILLAGE_SKYFILL = "/images/nes/village-scene/skyfill.webp";
 const VILLAGE_CLOUDS = villageSky.clouds as DriftingCloud[];
-const VILLAGE_SMOKE = villageSky.smoke as AmbientGlow;
+const VILLAGE_SMOKE = villageSky.smoke as AmbientGlow[];
 
 function DriftingCloudLayer({ cloud }: { cloud: DriftingCloud }) {
   // Two copies, one painting-width apart, inside a box that slides exactly one
@@ -510,19 +510,17 @@ function MapHub({ onSelect }: { onSelect: (screen: ScreenId) => void }) {
         <div className="relative mx-auto aspect-[4/3] w-[min(100%,calc((100dvh-12rem)*4/3))] overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
           <img src="/images/nes/village.webp" alt="Interactive pixel art village world map" className="block h-full w-full object-cover pixel-art" decoding="async" />
 
-          {/* Sky first: put plain sky back where the clouds and the plume were
-              painted, so the pieces below are the only ones in the sky. */}
-          <img src={VILLAGE_SKYFILL} alt="" aria-hidden="true" className="pointer-events-none absolute inset-0 h-full w-full object-cover pixel-art" decoding="async" />
-
           {VILLAGE_CLOUDS.map((cloud) => (
             <DriftingCloudLayer key={cloud.name} cloud={cloud} />
           ))}
 
-          {/* Then the things that stay put but move in place: the chimney
-              plume, the forge fire, the library lamps. All under the hotspots
-              so their tooltips still win. Decorative — the map's meaning is
-              in the buttons. */}
-          <AmbientGlowLayer glow={VILLAGE_SMOKE} />
+          {/* Then the things that stay put but move in place: smoke leaving
+              the two chimneys, the forge fire, the two door lanterns. All
+              under the hotspots so their tooltips still win. Decorative —
+              the map's meaning is in the buttons. */}
+          {VILLAGE_SMOKE.map((smoke) => (
+            <AmbientGlowLayer key={smoke.name} glow={smoke} />
+          ))}
           {VILLAGE_GLOWS.map((glow) => (
             <AmbientGlowLayer key={glow.name} glow={glow} />
           ))}

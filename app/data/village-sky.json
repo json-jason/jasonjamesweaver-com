@@ -2,94 +2,107 @@
   "clouds": [
     {
       "name": "cloud-0",
-      "seconds": 158,
+      "seconds": 92,
       "box": {
-        "left": "73.8260%",
-        "top": "2.1179%",
+        "left": "69.7514%",
+        "top": "3.6832%",
         "width": "23.6878%",
         "height": "14.0884%"
       }
     },
     {
       "name": "cloud-1",
-      "seconds": 167,
+      "seconds": 88,
       "box": {
-        "left": "14.4337%",
-        "top": "4.7882%",
+        "left": "10.3591%",
+        "top": "8.4715%",
         "width": "24.5856%",
         "height": "15.5617%"
       }
     },
     {
       "name": "cloud-2",
-      "seconds": 200,
+      "seconds": 82,
       "box": {
-        "left": "48.9641%",
-        "top": "14.1805%",
+        "left": "38.6740%",
+        "top": "13.8122%",
         "width": "21.8232%",
         "height": "13.1676%"
       }
     },
     {
       "name": "cloud-3",
-      "seconds": 207,
+      "seconds": 77,
       "box": {
-        "left": "67.6796%",
-        "top": "16.0221%",
+        "left": "81.4917%",
+        "top": "19.3370%",
         "width": "16.2293%",
         "height": "11.6943%"
       }
     },
     {
       "name": "cloud-4",
-      "seconds": 224,
+      "seconds": 73,
       "box": {
-        "left": "29.6271%",
-        "top": "20.7182%",
+        "left": "20.7182%",
+        "top": "23.0203%",
         "width": "16.3674%",
         "height": "11.9705%"
       }
     },
     {
       "name": "cloud-5",
-      "seconds": 239,
+      "seconds": 68,
       "box": {
-        "left": "60.7044%",
-        "top": "25.0460%",
+        "left": "54.5580%",
+        "top": "27.6243%",
         "width": "15.4696%",
         "height": "11.0497%"
       }
     },
     {
       "name": "cloud-6",
-      "seconds": 242,
+      "seconds": 64,
       "box": {
-        "left": "22.1685%",
-        "top": "25.7827%",
+        "left": "84.9448%",
+        "top": "32.2284%",
         "width": "12.5691%",
         "height": "10.3131%"
       }
     },
     {
       "name": "cloud-7",
-      "seconds": 250,
+      "seconds": 60,
       "box": {
-        "left": "34.8757%",
-        "top": "28.1768%",
+        "left": "4.1436%",
+        "top": "36.0958%",
         "width": "15.8149%",
         "height": "10.8656%"
       }
     }
   ],
-  "smoke": {
-    "name": "smoke",
-    "frames": 10,
-    "frameMs": 190,
-    "box": {
-      "left": "3.5221%",
-      "top": "0.0000%",
-      "width": "11.8094%",
-      "height": "26.0589%"
+  "smoke": [
+    {
+      "name": "smoke-left",
+      "frames": 16,
+      "frameMs": 110,
+      "box": {
+        "left": "4.8343%",
+        "top": "0.0000%",
+        "width": "9.5304%",
+        "height": "15.2855%"
+      }
+    },
+    {
+      "name": "smoke-right",
+      "frames": 16,
+      "frameMs": 110,
+      "box": {
+        "left": "80.1796%",
+        "top": "0.0000%",
+        "width": "8.7017%",
+        "height": "25.0460%"
+      }
     }
-  }
+  ]
 }

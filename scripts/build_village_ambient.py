@@ -70,13 +70,15 @@ REGIONS = [
     # The blacksmith's forge. A fire is restless: a wide swing, and a strong
     # vertical term so the light runs up the flames instead of the whole fire
     # breathing as one lump.
-    Region("forge", (1278, 686, 1340, 768), frame_ms=110, swing=0.22, lick=0.55, seed=0.0),
-    # The library's two door lamps and the candle in the door window, taken as
-    # one patch - they are close enough that one is cheaper than three, and the
-    # dead wall between them simply scores zero and is reproduced exactly.
-    # A lamp is steady: a small swing, almost no vertical term, and a slower
-    # beat than the fire so the two are never in step.
-    Region("library", (70, 666, 220, 730), frame_ms=210, swing=0.11, lick=0.12, seed=1.7),
+    Region("forge", (1240, 660, 1350, 790), frame_ms=110, swing=0.22, lick=0.55, seed=0.0),
+    # The big lantern by the library door. The redrawn artwork made it three
+    # times the size it used to be, so a gentle pulse now actually reads -
+    # the old version was too small for anything but a flicker nobody saw.
+    Region("library", (34, 665, 104, 795), frame_ms=210, swing=0.13, lick=0.16, seed=1.7),
+    # The matching lantern at the JJW house, taken together with the lit
+    # window beside it so both warm up and settle as one. Slower again, and
+    # off both other beats, so the three lights never pulse in step.
+    Region("jjw", (396, 648, 500, 742), frame_ms=250, swing=0.12, lick=0.14, seed=3.4),
 ]
 
 
