@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { LIBRARY_BOOKS, SHELF_ORDER } from "./data/library";
+import villageGlows from "./data/village-glows.json";
 
 type ScreenId = "status" | "journey" | "quests" | "library" | "contact";
 type ViewState = "start" | "map" | ScreenId;
@@ -216,6 +217,73 @@ const TITLE_PROMPT_BAND_DIM = "/images/nes/title-scene/prompt-band/prompt-band-d
 // opacity, exactly like the scene frames, rather than filtering type at runtime.
 const TITLE_PROMPT_BLINK_MS = 450;
 
+function usePrefersReducedMotion() {
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncMotionPreference = () => setReducedMotion(motionPreference.matches);
+    syncMotionPreference();
+    motionPreference.addEventListener("change", syncMotionPreference);
+    return () => motionPreference.removeEventListener("change", syncMotionPreference);
+  }, []);
+
+  return reducedMotion;
+}
+
+// Ambient glow loops on the village map. Each one is a small rebuilt patch of
+// the painting rather than a whole new field, so several can run at once for a
+// few KB each. Both the frames and this manifest come out of
+// scripts/build_village_ambient.py in one pass: the patches are measured off
+// the artwork, so their placement has to be written by whatever cut them
+// rather than copied here by hand. `box` is a percentage of the painting,
+// which is exact because the painting and the frame share one 4:3 ratio.
+type AmbientGlow = {
+  name: string;
+  frames: number;
+  frameMs: number;
+  box: { left: string; top: string; width: string; height: string };
+};
+
+const VILLAGE_GLOWS = villageGlows as AmbientGlow[];
+
+function glowFrameSrc(name: string, index: number) {
+  return `/images/nes/village-scene/${name}-${index}.webp`;
+}
+
+function AmbientGlowLayer({ glow }: { glow: AmbientGlow }) {
+  const [frame, setFrame] = useState(0);
+  const reducedMotion = usePrefersReducedMotion();
+
+  useEffect(() => {
+    if (reducedMotion) return;
+    const timer = window.setInterval(() => {
+      setFrame((current) => (current + 1) % glow.frames);
+    }, glow.frameMs);
+    return () => window.clearInterval(timer);
+  }, [reducedMotion, glow.frames, glow.frameMs]);
+
+  // Every frame is rendered as its own stacked layer and switched by opacity,
+  // the same way the title sequence works: swapping one <img>'s src would show
+  // a blank gap on the first pass through the loop while the next frame
+  // decodes. Frame 0 is the painting's own light, so a visitor who never sees
+  // the loop start sees exactly what was painted.
+  return (
+    <div className="pointer-events-none absolute" style={glow.box} aria-hidden="true">
+      {Array.from({ length: glow.frames }, (_, index) => (
+        <img
+          key={index}
+          src={glowFrameSrc(glow.name, index)}
+          alt=""
+          className="absolute inset-0 h-full w-full pixel-art"
+          style={{ opacity: (reducedMotion ? 0 : frame) === index ? 1 : 0 }}
+          decoding="async"
+        />
+      ))}
+    </div>
+  );
+}
+
 function PixelLink({ href, children, variant = "gold" }: { href: string; children: React.ReactNode; variant?: "gold" | "blue" }) {
   const variantClass =
     variant === "gold"
@@ -248,19 +316,11 @@ function StartScreen({ onStart }: { onStart: () => void }) {
   const [sequenceFrame, setSequenceFrame] = useState<number | null>(null);
   const [ambientFrame, setAmbientFrame] = useState(0);
   const [promptLit, setPromptLit] = useState(true);
-  const [reducedMotion, setReducedMotion] = useState(false);
+  const reducedMotion = usePrefersReducedMotion();
   const isEntering = sequenceFrame !== null;
   // Hold the prompt lit whenever it is not pulsing, so a paused blink always
   // rests on the readable state rather than wherever the timer left it.
   const promptIsLit = promptLit || reducedMotion || isEntering;
-
-  useEffect(() => {
-    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const syncMotionPreference = () => setReducedMotion(motionPreference.matches);
-    syncMotionPreference();
-    motionPreference.addEventListener("change", syncMotionPreference);
-    return () => motionPreference.removeEventListener("change", syncMotionPreference);
-  }, []);
 
   useEffect(() => {
     // Nothing animates under reduced motion, so there is nothing to preload.
@@ -411,6 +471,13 @@ function MapHub({ onSelect }: { onSelect: (screen: ScreenId) => void }) {
 
         <div className="relative mx-auto aspect-[4/3] w-[min(100%,calc((100dvh-12rem)*4/3))] overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
           <img src="/images/nes/village.webp" alt="Interactive pixel art village world map" className="block h-full w-full object-cover pixel-art" decoding="async" />
+
+          {/* Light that moves: the forge fire and the library lamps. Stacked
+              over the painting, under the hotspots so their tooltips still
+              win. Decorative — the map's meaning is in the buttons. */}
+          {VILLAGE_GLOWS.map((glow) => (
+            <AmbientGlowLayer key={glow.name} glow={glow} />
+          ))}
 
           {MAP_HOTSPOTS.map((spot) => (
             <button
