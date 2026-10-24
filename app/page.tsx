@@ -279,6 +279,14 @@ const TITLE_AMBIENT_FRAME_MS = 170;
 // layer keeps the type on the same pixel grid as the scene frames at every
 // viewport, which DOM text over pixel art can never be.
 const TITLE_PROMPT_BAND = "/images/nes/title-scene/prompt-band/prompt-band.webp";
+const TITLE_PROMPT_BAND_DIM = "/images/nes/title-scene/prompt-band/prompt-band-dim.webp";
+
+// The prompt blinks the way it always did: a two-state pulse, half the cycle
+// lit and half dim. Both states are baked bands that differ only in the ink of
+// the PRESS START line, so the credit, the ground and the dithered top edge
+// never move — and because they are stacked layers we cross-cut them by
+// opacity, exactly like the scene frames, rather than filtering type at runtime.
+const TITLE_PROMPT_BLINK_MS = 450;
 
 function PixelLink({ href, children, variant = "gold" }: { href: string; children: React.ReactNode; variant?: "gold" | "blue" }) {
   const variantClass =
@@ -311,8 +319,12 @@ function PixelAction({ href, children, onNavigate }: { href: string; children: R
 function StartScreen({ onStart }: { onStart: () => void }) {
   const [sequenceFrame, setSequenceFrame] = useState<number | null>(null);
   const [ambientFrame, setAmbientFrame] = useState(0);
+  const [promptLit, setPromptLit] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
   const isEntering = sequenceFrame !== null;
+  // Hold the prompt lit whenever it is not pulsing, so a paused blink always
+  // rests on the readable state rather than wherever the timer left it.
+  const promptIsLit = promptLit || reducedMotion || isEntering;
 
   useEffect(() => {
     const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -329,7 +341,7 @@ function StartScreen({ onStart }: { onStart: () => void }) {
     // which one is visible is instant with no load/decode flash.
     if (reducedMotion) return;
 
-    const images = [...TITLE_AMBIENT_SEQUENCE, ...TITLE_SWORD_SEQUENCE].map((src) => {
+    const images = [...TITLE_AMBIENT_SEQUENCE, ...TITLE_SWORD_SEQUENCE, TITLE_PROMPT_BAND_DIM].map((src) => {
       const image = new Image();
       image.src = src;
       return image;
@@ -343,6 +355,17 @@ function StartScreen({ onStart }: { onStart: () => void }) {
     const timer = window.setInterval(() => {
       setAmbientFrame((frame) => (frame + 1) % TITLE_AMBIENT_SEQUENCE.length);
     }, TITLE_AMBIENT_FRAME_MS);
+    return () => window.clearInterval(timer);
+  }, [reducedMotion, isEntering]);
+
+  useEffect(() => {
+    // Pulse the prompt while the title waits. Once the sword is raising, the
+    // visitor has already pressed start, so the prompt holds lit (see
+    // `promptIsLit`) rather than nagging through the sequence.
+    if (reducedMotion || isEntering) return;
+    const timer = window.setInterval(() => {
+      setPromptLit((lit) => !lit);
+    }, TITLE_PROMPT_BLINK_MS);
     return () => window.clearInterval(timer);
   }, [reducedMotion, isEntering]);
 
@@ -415,14 +438,26 @@ function StartScreen({ onStart }: { onStart: () => void }) {
             />
           ))}
           {/* Prompt + credit band, stacked last so it sits above every scene
-              frame. Static by design: it is part of the composition, not an
-              overlay, so it stays put through the sword sequence. The button
-              supplies the accessible name, so this layer is decorative. */}
+              frame. The band itself never moves — it is part of the
+              composition, not an overlay — so it stays put through the sword
+              sequence; only the PRESS START ink alternates between the two
+              baked variants. The dim layer sits under the lit one and is
+              revealed by fading the lit one out, so the ground stays opaque
+              and the scene never shows through the band mid-blink. The button
+              supplies the accessible name, so these layers are decorative. */}
+          <img
+            src={TITLE_PROMPT_BAND_DIM}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-auto w-full pixel-art"
+            decoding="async"
+          />
           <img
             src={TITLE_PROMPT_BAND}
             alt=""
             aria-hidden="true"
             className="pointer-events-none absolute inset-x-0 bottom-0 h-auto w-full pixel-art"
+            style={{ opacity: promptIsLit ? 1 : 0 }}
             fetchPriority="high"
             decoding="async"
           />

@@ -62,6 +62,14 @@ BAND_H = 146  # 13.44% of FIELD_H -> top edge at field row 940
 INK = (255, 255, 255, 255)
 GROUND = (0, 0, 0, 255)
 
+# The prompt blinks, so it is baked twice: lit and dim. Only the prompt line
+# changes between the two variants — the credit, the ground and the dithered
+# top edge are identical, so the band never flickers as a whole, just the
+# words that are asking to be pressed. The dim ink is the old CSS blink's
+# trough (#d7dbea at brightness 0.72) carried over as a flat colour, so the
+# cadence reads the same as it did before the band was baked.
+PROMPT_INK_DIM = (155, 158, 168, 255)
+
 # Vertical rhythm inside the band (sums to BAND_H). The gap is tight on purpose:
 # credit and prompt should read as one block of type sitting on one ground, not
 # as two unrelated lines.
@@ -198,7 +206,15 @@ def text_cells(text: str, tracking: int) -> int:
     return sum(cell_width(c) + tracking for c in text) - tracking
 
 
-def draw_text(draw: ImageDraw.ImageDraw, text: str, x: int, y: int, scale: int, tracking: int) -> None:
+def draw_text(
+    draw: ImageDraw.ImageDraw,
+    text: str,
+    x: int,
+    y: int,
+    scale: int,
+    tracking: int,
+    ink: tuple[int, int, int, int] = INK,
+) -> None:
     """Blit `text` with its top-left at (x, y), one font cell per scale-square."""
     pen = x
     for char in text:
@@ -210,7 +226,7 @@ def draw_text(draw: ImageDraw.ImageDraw, text: str, x: int, y: int, scale: int, 
                         continue
                     px = pen + rx * scale
                     py = y + ry * scale
-                    draw.rectangle((px, py, px + scale - 1, py + scale - 1), fill=INK)
+                    draw.rectangle((px, py, px + scale - 1, py + scale - 1), fill=ink)
         pen += (cell_width(char) + tracking) * scale
 
 
@@ -232,7 +248,7 @@ def dither_top_edge(band: Image.Image) -> None:
                     px[x, y] = (0, 0, 0, 0)
 
 
-def build_band() -> Image.Image:
+def build_band(prompt_ink: tuple[int, int, int, int] = INK) -> Image.Image:
     band = Image.new("RGBA", (FIELD_W, BAND_H), GROUND)
     draw = ImageDraw.Draw(band)
 
@@ -240,7 +256,15 @@ def build_band() -> Image.Image:
     prompt_y = credit_y + CELL_H * CREDIT_SCALE + GAP
 
     draw_text(draw, CREDIT, centered_x(CREDIT, CREDIT_SCALE, CREDIT_TRACKING), credit_y, CREDIT_SCALE, CREDIT_TRACKING)
-    draw_text(draw, PROMPT, centered_x(PROMPT, PROMPT_SCALE, PROMPT_TRACKING), prompt_y, PROMPT_SCALE, PROMPT_TRACKING)
+    draw_text(
+        draw,
+        PROMPT,
+        centered_x(PROMPT, PROMPT_SCALE, PROMPT_TRACKING),
+        prompt_y,
+        PROMPT_SCALE,
+        PROMPT_TRACKING,
+        ink=prompt_ink,
+    )
 
     used = prompt_y + CELL_H * PROMPT_SCALE + PAD_BOTTOM
     assert used == BAND_H, f"band rhythm sums to {used}, not {BAND_H}"
@@ -266,11 +290,12 @@ def main() -> None:
             raise SystemExit(f"Expected master art at {FIELD_W}x{FIELD_H}, found {art.size}")
 
     OUT.mkdir(parents=True, exist_ok=True)
-    band = build_band()
-    band.save(OUT / "prompt-band.png", format="PNG", optimize=True)
-    band.save(OUT / "prompt-band.webp", format="WEBP", lossless=True, quality=80, method=6)
+    for stem, prompt_ink in (("prompt-band", INK), ("prompt-band-dim", PROMPT_INK_DIM)):
+        band = build_band(prompt_ink)
+        band.save(OUT / f"{stem}.png", format="PNG", optimize=True)
+        band.save(OUT / f"{stem}.webp", format="WEBP", lossless=True, quality=80, method=6)
     print(
-        f"Built {FIELD_W}x{BAND_H} prompt band "
+        f"Built {FIELD_W}x{BAND_H} prompt band (lit + dim) "
         f"({BAND_H / FIELD_H:.2%} of the 4:3 field), top edge at field row "
         f"{FIELD_H - BAND_H} dithered through row {FIELD_H - BAND_H + DITHER_H - 1}, "
         f"in {OUT}"
