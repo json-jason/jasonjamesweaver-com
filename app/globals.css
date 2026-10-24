@@ -60,6 +60,29 @@ summary::-webkit-details-marker {
   backdrop-filter: blur(1px);
 }
 
+.cloud-drift {
+  /* One painting-width per cycle, stepped once per artwork pixel so the cloud
+     lands on whole pixels instead of smearing between them. The sprite has a
+     twin one width behind it, so the loop closes with no seam. The global
+     reduced-motion rule below stops this like any other animation, and the
+     clouds simply rest where they were painted. */
+  /* Written as the shorthand on purpose: the build prunes a @keyframes block
+     it cannot see referenced, and it does not follow `animation-name`. The
+     longhand form compiled away to nothing and the clouds sat still. The
+     200s here is a placeholder - each cloud overrides the duration inline. */
+  animation: cloud-drift 200s steps(1448, end) infinite;
+  will-change: transform;
+}
+
+@keyframes cloud-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
 .pixel-scroll {
   scrollbar-width: thin;
   scrollbar-color: #f6d365 rgba(255, 255, 255, 0.08);
