@@ -106,6 +106,20 @@ GROUP_REACH = 14
 # behind as specks floating in an empty sky after the cloud drifts away.
 SPARKLE_REACH = 46
 
+# How much of a blob's surroundings must be solid before it counts as
+# fastened to the village rather than floating. A share, not a count: a cloud
+# carries a few warm highlight pixels of its own, and a big cloud carries more
+# of them than a small one, so any fixed count either spares the flag or
+# condemns the larger clouds. Against this, a cloud scores a fraction of a
+# percent and the pennant - most of whose outline is pole and tower - scores
+# far above it.
+ATTACHED_SHARE = 0.10
+
+# How far a pixel must sit from its row's sky colour to count as part of a
+# blob at all, and how far past a kept blob to reach for its faint rim.
+BLOB_MIN_DIST = 12.0
+RIM_REACH = 4
+
 
 def find_shapes(px) -> list[list[tuple[int, int]]]:
     """Group the white pixels of the sky into clouds, sparkle included.
@@ -146,50 +160,126 @@ def find_shapes(px) -> list[list[tuple[int, int]]]:
     return shapes
 
 
-def is_sky_or_cloud(r: int, g: int, b: int) -> bool:
-    """True for sky, cloud, smoke and every blend of them; false for masonry.
+def is_cloud_colour(r: int, g: int, b: int) -> bool:
+    """Could this pixel be cloud, smoke, or a blend of one with the sky?
 
-    Measured off this artwork rather than guessed. Sky is (0,113,246) and
-    cloud is near-white, so anything on the line between them has blue far
-    ahead of red. The plume's grey runs (169,165,159) - near neutral, blue
-    only ten behind red. The chimney it leaves is warm and darker:
-    (158,141,108) is blue fifty behind, and its shadow line is near black.
+    Measured off this artwork. Sky is (0,113,246) and cloud is near-white, so
+    everything between them is neutral-or-bluer and bright. The chimney's warm
+    stonework runs (158,141,108), blue fifty behind red; its shadow line is
+    neutral but nearly black. Both are excluded, and both must be: the first
+    would be cut into the smoke sprite, the second would take a bite out of
+    the chimney when the hole was painted over.
 
-    So: near-neutral-or-bluer, and bright. The first clause drops the warm
-    stonework, the second drops its dark outline, which is neutral but almost
-    black. Both are needed - with only the first, the chimney's own shadow
-    would be cut into the smoke sprite and then painted out of the painting,
-    leaving a bite missing from the chimney.
+    This is a test of colour alone. It says the castle's navy pennant could be
+    cloud, because by colour it could. What rules the pennant out is that it
+    is attached to the castle - see free_floating_mask.
     """
-    return (r - b) <= 14 and b >= 140
+    return (r - b) <= 20 and b >= 140
 
 
-def matte(px, sky_rows, box, claimed: set) -> Image.Image:
-    """Pull an RGBA sprite out of the painting for one shape.
+def free_floating_mask(px, sky_rows, box, allow_attached: bool) -> set:
+    """The pixels in `box` that belong to something floating in the sky.
+
+    Weather floats; everything else in this sky is fastened to the village.
+    So cloud-coloured pixels are grouped into connected blobs, and a blob is
+    kept only if everything around it is sky. A blob with a rooftop, a tower
+    or a flagpole against it is part of the village and is left alone.
+
+    This is what protects the castle's pennant. By colour the pennant reads as
+    cloud, and it sits inside the sweep of the cloud above it, so a colour
+    test alone cut it out of the castle and carried it off with that cloud
+    while the repair painted the sky over the hole - the flag vanished. It is
+    attached to its pole, so this keeps it.
+
+    The chimney plume is attached too, on purpose, so it passes
+    `allow_attached` and is kept regardless.
+    """
+    x0, y0, x1, y1 = box
+    inside = lambda x, y: x0 <= x < x1 and y0 <= y < y1
+    # Cloud-coloured AND actually different from the sky. The sky is itself
+    # "cloud-coloured" - cloud is just sky with white mixed in, so they share
+    # the same hue test - and without the second half every blob swallowed its
+    # whole box, sky included, and then reported that the only thing it
+    # touched was the castle pennant. All four lower clouds were dropped.
+    def differs(x, y):
+        r, g, b = px[x, y]
+        sr, sg, sb = sky_rows[y]
+        return math.sqrt((r - sr) ** 2 + (g - sg) ** 2 + (b - sb) ** 2) > BLOB_MIN_DIST
+
+    cloudish = {
+        (x, y)
+        for y in range(y0, y1)
+        for x in range(x0, x1)
+        if is_cloud_colour(*px[x, y]) and differs(x, y)
+    }
+
+    kept: set = set()
+    seen: set = set()
+    for seed in cloudish:
+        if seed in seen:
+            continue
+        queue = deque([seed])
+        seen.add(seed)
+        blob = []
+        solid = sky_touch = 0
+        while queue:
+            cx, cy = queue.popleft()
+            blob.append((cx, cy))
+            for dx in (-2, -1, 0, 1, 2):
+                for dy in (-2, -1, 0, 1, 2):
+                    nx, ny = cx + dx, cy + dy
+                    if not inside(nx, ny):
+                        continue
+                    if (nx, ny) in cloudish:
+                        if (nx, ny) not in seen:
+                            seen.add((nx, ny))
+                            queue.append((nx, ny))
+                    elif is_sky(*px[nx, ny]):
+                        sky_touch += 1
+                    else:
+                        solid += 1
+        solid_share = solid / max(1, solid + sky_touch)
+        if allow_attached or solid_share < ATTACHED_SHARE:
+            kept.update(blob)
+
+    # The outermost wisp of a cloud is within BLOB_MIN_DIST of the sky, so it
+    # cannot seed a blob - but it is still cloud, and leaving it behind is
+    # what puts a faint outline in the sky once the cloud drifts off. Grow the
+    # kept area by a few pixels and let the matte's alpha decide the rest.
+    grown = set(kept)
+    for cx, cy in kept:
+        for dx in range(-RIM_REACH, RIM_REACH + 1):
+            for dy in range(-RIM_REACH, RIM_REACH + 1):
+                nx, ny = cx + dx, cy + dy
+                if inside(nx, ny) and is_cloud_colour(*px[nx, ny]):
+                    grown.add((nx, ny))
+    return grown
+
+
+def matte(px, sky_rows, box, claimed: set, allow_attached: bool = False) -> Image.Image:
+    """Pull an RGBA sprite out of the painting for one floating shape.
 
     Alpha is how far the pixel has travelled from its row's sky colour, so a
     solid white body comes out opaque, a half-blended edge comes out half
     transparent, and a wisp two shades off the sky comes out faint but
-    present. The colour is then un-mixed - the sky's contribution divided back
-    out - so a 40%-opaque edge carries the cloud's own colour at 40%, not a
-    muddy cloud-and-sky average that would darken against a new background.
+    present. Cutting on a yes/no test instead leaves that faint rim behind,
+    and sliding the cloud away then reveals an outline of where it used to be.
 
-    The box is assumed to hold nothing but sky and the shape, which is true
-    of all eleven clouds; the chimney plume's box also holds masonry, and
-    is_sky_or_cloud is what keeps the stonework out of the sprite.
+    The colour is un-mixed - the sky's contribution divided back out - so a
+    40%-opaque edge carries the cloud's own colour at 40%, not a muddy
+    cloud-and-sky average that would darken against a new background.
     """
     x0, y0, x1, y1 = box
     sprite = Image.new("RGBA", (x1 - x0, y1 - y0), (0, 0, 0, 0))
     sp = sprite.load()
+    takeable = free_floating_mask(px, sky_rows, box, allow_attached)
 
     for y in range(y0, y1):
         sr, sg, sb = sky_rows[y]
         for x in range(x0, x1):
-            if (x, y) in claimed:
+            if (x, y) in claimed or (x, y) not in takeable:
                 continue
             r, g, b = px[x, y]
-            if not is_sky_or_cloud(r, g, b):
-                continue
             dist = math.sqrt((r - sr) ** 2 + (g - sg) ** 2 + (b - sb) ** 2)
             alpha = min(1.0, dist / MATTE_FULL)
             if alpha <= 0.01:
@@ -270,7 +360,7 @@ def main() -> None:
     # Padded sideways and upward: the billow sways and climbs out of its own
     # painted outline, and anything it reaches has to be inside the sprite.
     pbox = (max(0, min(xs) - 10), max(0, min(ys) - 10), min(FIELD_W, max(xs) + 11), min(FIELD_H, max(ys) + 4))
-    plume_sprite = matte(px, sky_rows, pbox, claimed)
+    plume_sprite = matte(px, sky_rows, pbox, claimed, allow_attached=True)
 
     px0, py0, px1, py1 = pbox
     ppx = plume_sprite.load()
@@ -279,7 +369,7 @@ def main() -> None:
             # is_sky_or_cloud already keeps masonry out of the sprite; repeat
             # it here so the overlay cannot bite a notch out of the chimney
             # even if the matte ever grows looser.
-            if ppx[x - px0, y - py0][3] > 0 and is_sky_or_cloud(*px[x, y]):
+            if ppx[x - px0, y - py0][3] > 0 and is_cloud_colour(*px[x, y]):
                 fill[x, y] = (*sky_rows[y], 255)
 
     pw, ph = px1 - px0, py1 - py0
