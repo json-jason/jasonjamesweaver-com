@@ -36,7 +36,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "public/images/nes/title-screen.webp"
@@ -57,7 +57,7 @@ OUT = ROOT / "public/images/nes/title-scene/prompt-band"
 # survives and reads against the black.
 FIELD_W = 1448
 FIELD_H = 1086
-BAND_H = 146  # 13.44% of FIELD_H -> top edge at field row 940
+GRASS_FRINGE_BOTTOM = 948  # deepest grass blade of the cliff overhang
 
 INK = (255, 255, 255, 255)
 GROUND = (0, 0, 0, 255)
@@ -84,9 +84,14 @@ PROMPT_INK_DIM = (155, 158, 168, 255)
 # leaves 40px of clean ground to split. It is split 22 above / 18 below rather
 # than 20/20: the block is optically centred, and type set against a stippled
 # upper edge needs slightly more air above it than below to look level.
-PAD_TOP = 34  # 12px dither + 22px clean black above the credit's cap line
-GAP = 24  # separation between the credit line and the prompt
-PAD_BOTTOM = 18
+# Where the type sits in the field. The grass fringe of the cliff bottoms out
+# at field row 948 (measured across every column, see above), so the credit's
+# cap line starts at 962: fourteen clear pixels below the deepest blade, with
+# the halo's own reach taking up the slack. Below the fringe the cliff face is
+# a large, dark, low-frequency brown - the one place in the composition that
+# can carry type without fighting it.
+CREDIT_TOP = 962
+GAP = 20  # separation between the credit line and the prompt
 
 # Credit line: small, hairline, the attribution slot.
 CREDIT = "© 2026 JASON WEAVER · TECHNOLOGY LEADER"
@@ -97,6 +102,18 @@ CREDIT_TRACKING = 2  # cells of air between glyphs; matters a lot at this size
 PROMPT = "PRESS START"
 PROMPT_SCALE = 6  # 7 cells tall -> 42px = 3.87% of FIELD_H
 PROMPT_TRACKING = 3
+
+# --- Halo --------------------------------------------------------------------
+# The type has no ground behind it, so it carries its own. The halo is the
+# glyph mask grown outward by a fixed number of field pixels and filled with
+# near-black: a shape that hugs the letters instead of boxing them. Because it
+# is grown from the glyphs themselves it stays on the artwork's grid, and
+# because it is only a few pixels deep the cliff's own texture still reads
+# right up to the type. Grown wider for the prompt than the credit, in
+# proportion to their scales, so both lines carry the same visual weight.
+HALO_ALPHA = 0.86
+CREDIT_HALO = 6
+PROMPT_HALO = 8
 
 # --- Top-edge dither ---------------------------------------------------------
 # A hard horizontal rule across pixel art always reads as a crop. The era's own
@@ -213,9 +230,13 @@ def draw_text(
     y: int,
     scale: int,
     tracking: int,
-    ink: tuple[int, int, int, int] = INK,
+    ink: tuple[int, int, int, int] | int = INK,
 ) -> None:
-    """Blit `text` with its top-left at (x, y), one font cell per scale-square."""
+    """Blit `text` with its top-left at (x, y), one font cell per scale-square.
+
+    `ink` is an RGBA tuple on a colour layer, or a single level when drawing
+    into an "L" mask.
+    """
     pen = x
     for char in text:
         rows = GLYPHS.get(char)
@@ -248,38 +269,53 @@ def dither_top_edge(band: Image.Image) -> None:
                     px[x, y] = (0, 0, 0, 0)
 
 
-def build_band(prompt_ink: tuple[int, int, int, int] = INK) -> Image.Image:
-    band = Image.new("RGBA", (FIELD_W, BAND_H), GROUND)
-    draw = ImageDraw.Draw(band)
+def halo_line(
+    layer: Image.Image,
+    text: str,
+    y: int,
+    scale: int,
+    tracking: int,
+    grow: int,
+    ink: tuple[int, int, int, int],
+) -> None:
+    """Draw one line as a grown dark halo with the glyphs set on top of it."""
+    x = centered_x(text, scale, tracking)
 
-    credit_y = PAD_TOP
+    mask = Image.new("L", layer.size, 0)
+    draw_text(ImageDraw.Draw(mask), text, x, y, scale, tracking, ink=255)
+    # MaxFilter over a binary mask is a square dilation: every ink pixel paints
+    # its (grow)-pixel neighbourhood, so the halo is itself made of whole
+    # field pixels and never resamples off the grid.
+    grown = mask.filter(ImageFilter.MaxFilter(grow * 2 + 1))
+
+    halo = Image.new("RGBA", layer.size, (0, 0, 0, 0))
+    halo.putalpha(grown.point(lambda v: int(v * HALO_ALPHA)))
+    layer.alpha_composite(halo)
+
+    glyphs = Image.new("RGBA", layer.size, (0, 0, 0, 0))
+    draw_text(ImageDraw.Draw(glyphs), text, x, y, scale, tracking, ink=ink)
+    layer.alpha_composite(glyphs)
+
+
+def build_overlay(prompt_ink: tuple[int, int, int, int] = INK) -> Image.Image:
+    """A full-field transparent layer carrying only the credit and the prompt."""
+    layer = Image.new("RGBA", (FIELD_W, FIELD_H), (0, 0, 0, 0))
+
+    credit_y = CREDIT_TOP
     prompt_y = credit_y + CELL_H * CREDIT_SCALE + GAP
+    prompt_bottom = prompt_y + CELL_H * PROMPT_SCALE
 
-    draw_text(draw, CREDIT, centered_x(CREDIT, CREDIT_SCALE, CREDIT_TRACKING), credit_y, CREDIT_SCALE, CREDIT_TRACKING)
-    draw_text(
-        draw,
-        PROMPT,
-        centered_x(PROMPT, PROMPT_SCALE, PROMPT_TRACKING),
-        prompt_y,
-        PROMPT_SCALE,
-        PROMPT_TRACKING,
-        ink=prompt_ink,
+    # The type lives on the cliff: below the grass fringe, clear of the frame.
+    assert credit_y - CREDIT_HALO >= GRASS_FRINGE_BOTTOM, (
+        f"credit halo reaches row {credit_y - CREDIT_HALO}, into grass at {GRASS_FRINGE_BOTTOM}"
+    )
+    assert prompt_bottom + PROMPT_HALO <= FIELD_H - 12, (
+        f"prompt halo reaches row {prompt_bottom + PROMPT_HALO}, too close to the frame edge"
     )
 
-    used = prompt_y + CELL_H * PROMPT_SCALE + PAD_BOTTOM
-    assert used == BAND_H, f"band rhythm sums to {used}, not {BAND_H}"
-    # The type must never sit on stippled ground, so it starts below the dither.
-    assert PAD_TOP >= DITHER_H, f"credit at {PAD_TOP} lands inside the {DITHER_H}px dither"
-    # ...and it must not merely clear the dither, it must breathe under it. The
-    # clean black above the credit is optically centred against the air below
-    # the prompt: never less than PAD_BOTTOM, never more than a few px more.
-    clear_above = PAD_TOP - DITHER_H
-    assert PAD_BOTTOM <= clear_above <= PAD_BOTTOM + 6, (
-        f"top air {clear_above} vs bottom air {PAD_BOTTOM} is not optically centred"
-    )
-
-    dither_top_edge(band)
-    return band
+    halo_line(layer, CREDIT, credit_y, CREDIT_SCALE, CREDIT_TRACKING, CREDIT_HALO, INK)
+    halo_line(layer, PROMPT, prompt_y, PROMPT_SCALE, PROMPT_TRACKING, PROMPT_HALO, prompt_ink)
+    return layer
 
 
 def main() -> None:
@@ -291,14 +327,13 @@ def main() -> None:
 
     OUT.mkdir(parents=True, exist_ok=True)
     for stem, prompt_ink in (("prompt-band", INK), ("prompt-band-dim", PROMPT_INK_DIM)):
-        band = build_band(prompt_ink)
-        band.save(OUT / f"{stem}.png", format="PNG", optimize=True)
-        band.save(OUT / f"{stem}.webp", format="WEBP", lossless=True, quality=80, method=6)
+        layer = build_overlay(prompt_ink)
+        layer.save(OUT / f"{stem}.png", format="PNG", optimize=True)
+        layer.save(OUT / f"{stem}.webp", format="WEBP", lossless=True, quality=80, method=6)
     print(
-        f"Built {FIELD_W}x{BAND_H} prompt band (lit + dim) "
-        f"({BAND_H / FIELD_H:.2%} of the 4:3 field), top edge at field row "
-        f"{FIELD_H - BAND_H} dithered through row {FIELD_H - BAND_H + DITHER_H - 1}, "
-        f"in {OUT}"
+        f"Built {FIELD_W}x{FIELD_H} title type overlay (lit + dim): credit at field "
+        f"row {CREDIT_TOP}, clear of the grass fringe at {GRASS_FRINGE_BOTTOM}, "
+        f"no ground - the river below stays visible. In {OUT}"
     )
 
 

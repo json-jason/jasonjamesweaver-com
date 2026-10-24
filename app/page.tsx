@@ -365,26 +365,27 @@ function StartScreen({ onStart }: { onStart: () => void }) {
               decoding="async"
             />
           ))}
-          {/* Prompt + credit band, stacked last so it sits above every scene
-              frame. The band itself never moves — it is part of the
-              composition, not an overlay — so it stays put through the sword
-              sequence; only the PRESS START ink alternates between the two
-              baked variants. The dim layer sits under the lit one and is
-              revealed by fading the lit one out, so the ground stays opaque
-              and the scene never shows through the band mid-blink. The button
-              supplies the accessible name, so these layers are decorative. */}
+          {/* Credit + prompt, stacked last so the type sits above every scene
+              frame. It is a full-field transparent layer, registered to the
+              same box as the art, carrying nothing but the two lines and the
+              halo they stand on — no ground, so the river keeps shimmering
+              underneath. The type itself never moves; only the PRESS START ink
+              alternates between the two baked variants, and the dim layer sits
+              under the lit one so fading the lit one out reveals it without
+              ever letting the halo thin. The button supplies the accessible
+              name, so these layers are decorative. */}
           <img
             src={TITLE_PROMPT_BAND_DIM}
             alt=""
             aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-auto w-full pixel-art"
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover pixel-art"
             decoding="async"
           />
           <img
             src={TITLE_PROMPT_BAND}
             alt=""
             aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-auto w-full pixel-art"
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover pixel-art"
             style={{ opacity: promptIsLit ? 1 : 0 }}
             fetchPriority="high"
             decoding="async"
