@@ -38,9 +38,27 @@ FIELD_H = 1086
 # puff now takes about eight seconds to leave the chimney, climb, lean, swell
 # and fade. The frame count is what keeps that slow climb smooth rather than
 # visibly stepping - at this speed too few frames and the puffs crawl.
-FRAMES = 32
-PUFFS = 7
-FRAME_MS = 250
+# Smoke is drawn as a flowing column, not as a row of puffs.
+#
+# Puffs were the obvious model and they were wrong. Evenly spaced puffs all
+# advance in phase together, so the whole stack swells at once and then a puff
+# pops off the top while a fresh small one appears at the mouth - the column
+# visibly inflating and resetting every second or so. No amount of jitter
+# fixes that; it is inherent to drawing smoke as a handful of discrete blobs.
+#
+# Instead there is a density field: how much smoke is at each point, as a
+# plume shape multiplied by a drifting noise texture. The texture scrolls
+# upward at a constant rate, so smoke flows continuously past any given
+# height and nothing ever pops. Thresholding that density into three flat
+# tones keeps the hard pixel edges and gives the ragged outline for free.
+#
+# The texture repeats NOISE_CYCLES times over the plume's height and scrolls
+# exactly one of those per loop. That is what lets the loop be short while
+# the smoke is slow: the pattern only travels half the plume per cycle, so a
+# wisp takes two full loops - about seventeen seconds - to climb and vanish.
+FRAMES = 30
+FRAME_MS = 280
+NOISE_CYCLES = 2.5
 
 # Smoke is drawn from three flat tones, no blending between them. Anti-aliased
 # circles would read as a modern soft brush dropped onto pixel art, so each
@@ -78,47 +96,23 @@ CHIMNEYS = [
 ]
 
 
-def puff_shape(phase: float, seed: int) -> list[tuple[float, float, float, tuple[int, int, int]]]:
-    """A puff as a cluster of overlapping discs: (dx, dy, radius, colour).
+def noise(u: float, v: float) -> float:
+    """A drifting texture in [-1, 1], periodic in v with period 1.
 
-    One disc is a ball, not smoke, and a row of identical clusters is a string
-    of bubbles - which is what the first version looked like. So each puff is
-    built from six discs whose offsets and sizes are jittered from a seed, and
-    the seed is the puff's index, so no two puffs in the loop are the same
-    shape. The jitter is deterministic, so the loop still closes: on the frame
-    after the last, every puff is back at its own starting phase.
-
-    The cluster swells as it rises, and spreads sideways faster than it grows
-    tall, the way smoke loses its shape as it cools.
+    Built from sine terms whose v-frequencies are whole numbers, so advancing
+    v by exactly 1 returns the field to itself - which is what makes the loop
+    close with no seam. No random numbers, so a rebuild is byte-identical.
     """
-    grow = 1.0 + phase * 2.6
-    spread = 1.0 + phase * 1.5
-
-    def wobble(n: int) -> float:
-        # A cheap deterministic hash in [-1, 1]; no RNG, so a rebuild of the
-        # frames is always byte-identical.
-        return ((seed * 37 + n * 101) % 23) / 11.0 - 1.0
-
-    discs = []
-    for n, (bx, by, br, colour) in enumerate(
-        [
-            (-3.4, 2.0, 3.6, MID),
-            (3.0, 1.4, 3.4, MID),
-            (-1.6, -0.6, 4.2, LIGHT),
-            (2.2, -1.0, 4.0, LIGHT),
-            (0.0, -2.6, 4.6, WHITE),
-            (-0.4, 0.8, 4.4, WHITE),
-        ]
-    ):
-        discs.append(
-            (
-                (bx + wobble(n) * 2.2 * phase) * spread,
-                (by + wobble(n + 7) * 1.6) * grow,
-                (br + wobble(n + 13) * 0.9) * grow,
-                colour,
-            )
-        )
-    return discs
+    # The sideways coefficients are small on purpose. With them large the
+    # texture varied faster across the column than along it, which drew long
+    # thin streaks - the plume read as a flame or a feather rather than
+    # smoke. Keeping them near the vertical rate makes the cells roughly
+    # round, so the column billows.
+    return (
+        0.55 * math.sin(2 * math.pi * (v + 0.34 * u))
+        + 0.28 * math.sin(2 * math.pi * (2 * v - 0.58 * u) + 1.3)
+        + 0.17 * math.sin(2 * math.pi * (3 * v + 0.91 * u) + 2.7)
+    )
 
 
 def build(chimney: Chimney, box: tuple[int, int, int, int]) -> list[Image.Image]:
@@ -128,37 +122,45 @@ def build(chimney: Chimney, box: tuple[int, int, int, int]) -> list[Image.Image]
 
     frames = []
     for i in range(FRAMES):
+        scroll = i / FRAMES
         coarse = Image.new("RGBA", (bw, bh), (0, 0, 0, 0))
-        draw = ImageDraw.Draw(coarse)
-        for k in range(PUFFS):
-            phase = ((i / FRAMES) + k / PUFFS) % 1.0
-            # Opacity is zero at both ends of a puff's life, so the oldest
-            # puff has vanished exactly as the newest appears and the loop
-            # has no visible join. In between it is not symmetric: a puff
-            # thickens almost at once as it clears the chimney, then takes
-            # the rest of its life to thin out. A symmetric curve left a gap
-            # of clear sky above the stack, as though the smoke started a
-            # foot up.
-            alpha = min(1.0, phase / 0.10) * (1.0 - phase) ** 0.85
-            if alpha <= 0.01:
+        cp = coarse.load()
+
+        for by in range(bh):
+            fy = y0 + by * BLOCK
+            # Height above the chimney mouth, 0 at the stack and 1 where the
+            # smoke is gone.
+            climb = (chimney.mouth_y - fy) / chimney.travel
+            if not (0.0 <= climb <= 1.0):
                 continue
-            # The climb eases off: smoke leaves the chimney briskly and slows
-            # as it spreads.
-            climb = phase ** 0.78
-            cx = chimney.mouth_x + chimney.drift * max(0.0, phase - chimney.lean) ** 1.5
-            cy = chimney.mouth_y - chimney.travel * climb
-            # A slow sideways wander on top of the lean, so the column is not
-            # a straight line of identical blobs.
-            cx += math.sin(phase * math.pi * 2.2 + k) * 3.5 * phase
 
-            for dx, dy, radius, colour in puff_shape(phase, k):
-                px = (cx + dx - x0) / BLOCK
-                py = (cy + dy - y0) / BLOCK
-                r = radius / BLOCK
-                draw.ellipse((px - r, py - r, px + r, py + r), fill=(*colour, round(alpha * 255)))
+            # The column leans away on the wind and widens as it cools, and
+            # thins out towards the top until there is nothing left.
+            centre = chimney.mouth_x + chimney.drift * max(0.0, climb - chimney.lean) ** 1.5
+            width = 11.0 + 24.0 * climb
+            fade = (1.0 - climb) ** 0.80
 
-        frame = coarse.resize((bw * BLOCK, bh * BLOCK), Image.NEAREST).crop((0, 0, w, h))
-        frames.append(frame)
+            v = climb * NOISE_CYCLES - scroll
+            for bx in range(bw):
+                fx = x0 + bx * BLOCK
+                across = (fx - centre) / width
+                if abs(across) > 2.6:
+                    continue
+                # Fat in the middle, feathering out at the sides.
+                body = math.exp(-across * across * 0.95)
+                density = body * fade * (0.86 + 0.44 * noise(across, v))
+
+                # Three flat tones and a hard cut to nothing. The noise makes
+                # these boundaries wander, which is where the ragged edge and
+                # the holes in the column come from.
+                if density > 0.62:
+                    cp[bx, by] = (*WHITE, 255)
+                elif density > 0.38:
+                    cp[bx, by] = (*LIGHT, 255)
+                elif density > 0.17:
+                    cp[bx, by] = (*MID, 255)
+
+        frames.append(coarse.resize((bw * BLOCK, bh * BLOCK), Image.NEAREST).crop((0, 0, w, h)))
     return frames
 
 
@@ -172,7 +174,7 @@ def main() -> None:
     for chimney in CHIMNEYS:
         # The box has to hold every puff at its fattest, including the lean,
         # or the smoke is clipped by its own sprite.
-        reach = int(abs(chimney.drift)) + 26
+        reach = int(abs(chimney.drift)) + 40
         x0 = max(0, chimney.mouth_x - (reach if chimney.drift < 0 else 26))
         x1 = min(FIELD_W, chimney.mouth_x + (reach if chimney.drift > 0 else 26))
         y0 = max(0, chimney.mouth_y - chimney.travel - 26)

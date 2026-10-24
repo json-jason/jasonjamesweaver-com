@@ -84,34 +84,34 @@
   "smoke": [
     {
       "name": "smoke-left",
-      "frames": 32,
-      "frameMs": 250,
+      "frames": 30,
+      "frameMs": 280,
       "box": {
         "left": "4.8343%",
         "top": "0.0000%",
-        "width": "9.5304%",
+        "width": "10.4972%",
         "height": "15.2855%"
       }
     },
     {
       "name": "smoke-jjw",
-      "frames": 32,
-      "frameMs": 250,
+      "frames": 30,
+      "frameMs": 280,
       "box": {
         "left": "34.5304%",
         "top": "8.5635%",
-        "width": "8.0110%",
+        "width": "8.9779%",
         "height": "25.0460%"
       }
     },
     {
       "name": "smoke-right",
-      "frames": 32,
-      "frameMs": 250,
+      "frames": 30,
+      "frameMs": 280,
       "box": {
-        "left": "80.1796%",
+        "left": "79.2127%",
         "top": "0.0000%",
-        "width": "8.7017%",
+        "width": "9.6685%",
         "height": "25.0460%"
       }
     }
