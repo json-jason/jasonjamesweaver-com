@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { LIBRARY_BOOKS, SHELF_ORDER } from "./data/library";
+
 type ScreenId = "status" | "journey" | "quests" | "library" | "contact";
 type ViewState = "start" | "map" | ScreenId;
 
@@ -26,6 +28,18 @@ type BookSection = {
   heading: string;
   books: BookEntry[];
 };
+
+// The Library shelves are built from app/data/library.json, which mirrors the
+// `Show on site` rows of the Infinite Bookshelf sheet. Shelves stay in
+// SHELF_ORDER; an empty shelf is dropped rather than rendered as a bare heading.
+const LIBRARY_SECTIONS: BookSection[] = SHELF_ORDER.map((heading) => ({
+  heading,
+  books: LIBRARY_BOOKS.filter((book) => book.shelf === heading).map((book) => ({
+    title: book.title,
+    author: book.author,
+    note: book.why,
+  })),
+})).filter((section) => section.books.length > 0);
 
 type World = {
   id: ScreenId;
@@ -138,88 +152,7 @@ const WORLDS: World[] = [
     alt: "Pixel art library shelves for the library section",
     panelPosition: "md:bottom-8 md:left-8",
     body: "Books worth your time, organized by what they're good for. Tools, people, and media are coming soon.",
-    sections: [
-      {
-        heading: "Personal Growth / Philosophy",
-        books: [
-          {
-            title: "A New Earth",
-            author: "Eckhart Tolle",
-            note: "Helps you recognize the ego's influence and become more present in everyday life.",
-          },
-          {
-            title: "The Art of Happiness",
-            author: "Dalai Lama & Howard C. Cutler",
-            note: "Shows that happiness is a skill that can be intentionally cultivated.",
-          },
-          {
-            title: "Radical Acceptance",
-            author: "Tara Brach",
-            note: "Teaches that genuine change begins with self-acceptance rather than self-criticism.",
-          },
-          {
-            title: "You Are Here",
-            author: "Thich Nhat Hanh",
-            note: "A gentle introduction to mindfulness and fully experiencing the present moment.",
-          },
-          {
-            title: "Four Thousand Weeks",
-            author: "Oliver Burkeman",
-            note: "Reframes productivity by embracing the reality that your time is finite.",
-          },
-          {
-            title: "The Big Leap",
-            author: "Gay Hendricks",
-            note: "Explores why we sabotage ourselves just as life starts going well, and how to stop.",
-          },
-          {
-            title: "The Mountain Is You",
-            author: "Brianna Wiest",
-            note: "Turns self-sabotage into a practical roadmap for personal growth and emotional maturity.",
-          },
-        ],
-      },
-      {
-        heading: "Business / Entrepreneurship",
-        books: [
-          {
-            title: "Anything You Want",
-            author: "Derek Sivers",
-            note: "A short, inspiring blueprint for building a business around freedom, purpose, and simplicity.",
-          },
-          {
-            title: "Rework",
-            author: "Jason Fried & David Heinemeier Hansson",
-            note: "Challenges conventional business wisdom with practical advice for doing more with less.",
-          },
-        ],
-      },
-      {
-        heading: "Resilience",
-        books: [
-          {
-            title: "Iron Hope",
-            author: "James Lawrence",
-            note: "A reminder that extraordinary achievements are built through grit, consistency, and refusing to quit.",
-          },
-        ],
-      },
-      {
-        heading: "Memoir / Travel / Culture",
-        books: [
-          {
-            title: "Travels with Charley",
-            author: "John Steinbeck",
-            note: "A thoughtful journey across America that reveals as much about people and place as it does about the author.",
-          },
-          {
-            title: "Extra Virginity",
-            author: "Tom Mueller",
-            note: "An eye-opening look at olive oil, food fraud, craftsmanship, and why quality matters.",
-          },
-        ],
-      },
-    ],
+    sections: LIBRARY_SECTIONS,
   },
   {
     id: "contact",
