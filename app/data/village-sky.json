@@ -84,8 +84,8 @@
   "smoke": [
     {
       "name": "smoke-left",
-      "frames": 26,
-      "frameMs": 195,
+      "frames": 32,
+      "frameMs": 250,
       "box": {
         "left": "4.8343%",
         "top": "0.0000%",
@@ -95,8 +95,8 @@
     },
     {
       "name": "smoke-jjw",
-      "frames": 26,
-      "frameMs": 195,
+      "frames": 32,
+      "frameMs": 250,
       "box": {
         "left": "34.5304%",
         "top": "8.5635%",
@@ -106,8 +106,8 @@
     },
     {
       "name": "smoke-right",
-      "frames": 26,
-      "frameMs": 195,
+      "frames": 32,
+      "frameMs": 250,
       "box": {
         "left": "80.1796%",
         "top": "0.0000%",

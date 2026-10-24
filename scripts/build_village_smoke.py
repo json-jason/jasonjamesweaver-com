@@ -34,13 +34,13 @@ FIELD_W = 1448
 FIELD_H = 1086
 
 # Smoke rises slowly. The first attempt ran a puff's whole life in under two
-# seconds, which read as steam escaping a kettle under pressure rather than a
-# hearth ticking over. A puff now takes about five seconds to leave the
-# chimney and fade, and the extra frames keep that slow climb smooth instead
-# of stepping visibly.
-FRAMES = 26
-PUFFS = 5
-FRAME_MS = 195
+# seconds, which read as a kettle under pressure; five was still brisk. A
+# puff now takes about eight seconds to leave the chimney, climb, lean, swell
+# and fade. The frame count is what keeps that slow climb smooth rather than
+# visibly stepping - at this speed too few frames and the puffs crawl.
+FRAMES = 32
+PUFFS = 7
+FRAME_MS = 250
 
 # Smoke is drawn from three flat tones, no blending between them. Anti-aliased
 # circles would read as a modern soft brush dropped onto pixel art, so each
@@ -78,20 +78,47 @@ CHIMNEYS = [
 ]
 
 
-def puff_shape(phase: float) -> list[tuple[float, float, float, tuple[int, int, int]]]:
-    """A puff as a few overlapping discs: (dx, dy, radius, colour).
+def puff_shape(phase: float, seed: int) -> list[tuple[float, float, float, tuple[int, int, int]]]:
+    """A puff as a cluster of overlapping discs: (dx, dy, radius, colour).
 
-    One disc is a ball, not smoke. Three off-centre discs of different sizes
-    give the lumpy silhouette, and keeping the darkest one low and left
-    suggests the light is coming from the same place as everywhere else in
-    the painting.
+    One disc is a ball, not smoke, and a row of identical clusters is a string
+    of bubbles - which is what the first version looked like. So each puff is
+    built from six discs whose offsets and sizes are jittered from a seed, and
+    the seed is the puff's index, so no two puffs in the loop are the same
+    shape. The jitter is deterministic, so the loop still closes: on the frame
+    after the last, every puff is back at its own starting phase.
+
+    The cluster swells as it rises, and spreads sideways faster than it grows
+    tall, the way smoke loses its shape as it cools.
     """
-    grow = 1.0 + phase * 1.9
-    return [
-        (-2.0 * grow, 1.6 * grow, 3.1 * grow, MID),
-        (1.8 * grow, 0.6 * grow, 3.6 * grow, LIGHT),
-        (0.0, -1.4 * grow, 4.2 * grow, WHITE),
-    ]
+    grow = 1.0 + phase * 2.6
+    spread = 1.0 + phase * 1.5
+
+    def wobble(n: int) -> float:
+        # A cheap deterministic hash in [-1, 1]; no RNG, so a rebuild of the
+        # frames is always byte-identical.
+        return ((seed * 37 + n * 101) % 23) / 11.0 - 1.0
+
+    discs = []
+    for n, (bx, by, br, colour) in enumerate(
+        [
+            (-3.4, 2.0, 3.6, MID),
+            (3.0, 1.4, 3.4, MID),
+            (-1.6, -0.6, 4.2, LIGHT),
+            (2.2, -1.0, 4.0, LIGHT),
+            (0.0, -2.6, 4.6, WHITE),
+            (-0.4, 0.8, 4.4, WHITE),
+        ]
+    ):
+        discs.append(
+            (
+                (bx + wobble(n) * 2.2 * phase) * spread,
+                (by + wobble(n + 7) * 1.6) * grow,
+                (br + wobble(n + 13) * 0.9) * grow,
+                colour,
+            )
+        )
+    return discs
 
 
 def build(chimney: Chimney, box: tuple[int, int, int, int]) -> list[Image.Image]:
@@ -107,8 +134,12 @@ def build(chimney: Chimney, box: tuple[int, int, int, int]) -> list[Image.Image]
             phase = ((i / FRAMES) + k / PUFFS) % 1.0
             # Opacity is zero at both ends of a puff's life, so the oldest
             # puff has vanished exactly as the newest appears and the loop
-            # has no visible join.
-            alpha = math.sin(math.pi * phase) ** 0.7
+            # has no visible join. In between it is not symmetric: a puff
+            # thickens almost at once as it clears the chimney, then takes
+            # the rest of its life to thin out. A symmetric curve left a gap
+            # of clear sky above the stack, as though the smoke started a
+            # foot up.
+            alpha = min(1.0, phase / 0.10) * (1.0 - phase) ** 0.85
             if alpha <= 0.01:
                 continue
             # The climb eases off: smoke leaves the chimney briskly and slows
@@ -120,7 +151,7 @@ def build(chimney: Chimney, box: tuple[int, int, int, int]) -> list[Image.Image]
             # a straight line of identical blobs.
             cx += math.sin(phase * math.pi * 2.2 + k) * 3.5 * phase
 
-            for dx, dy, radius, colour in puff_shape(phase):
+            for dx, dy, radius, colour in puff_shape(phase, k):
                 px = (cx + dx - x0) / BLOCK
                 py = (cy + dy - y0) / BLOCK
                 r = radius / BLOCK

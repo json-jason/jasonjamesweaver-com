@@ -246,7 +246,12 @@ type AmbientGlow = {
   box: { left: string; top: string; width: string; height: string };
 };
 
-const VILLAGE_GLOWS = villageGlows as AmbientGlow[];
+// The castle's pennant is in the distance, behind the weather, so it is
+// drawn before the clouds. Everything else that moves in place — the forge,
+// the two door lanterns — is village, and is drawn after the rooftops.
+const ALL_GLOWS = villageGlows as AmbientGlow[];
+const DISTANT_GLOWS = ALL_GLOWS.filter((glow) => glow.name === "flag");
+const VILLAGE_GLOWS = ALL_GLOWS.filter((glow) => glow.name !== "flag");
 
 // The sky's moving parts. The artwork is drawn with an empty sky and empty
 // chimneys on purpose, so nothing has to be cut out of it and nothing has to
@@ -516,6 +521,12 @@ function MapHub({ onSelect }: { onSelect: (screen: ScreenId) => void }) {
 
         <div className="relative mx-auto aspect-[4/3] w-[min(100%,calc((100dvh-12rem)*4/3))] overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
           <img src="/images/nes/village.webp" alt="Interactive pixel art village world map" className="block h-full w-full object-cover pixel-art" decoding="async" />
+
+          {/* Distant movement, under the weather: the castle pennant. A cloud
+              crossing the castle should cross its flag too. */}
+          {DISTANT_GLOWS.map((glow) => (
+            <AmbientGlowLayer key={glow.name} glow={glow} />
+          ))}
 
           {VILLAGE_CLOUDS.map((cloud) => (
             <DriftingCloudLayer key={cloud.name} cloud={cloud} />
