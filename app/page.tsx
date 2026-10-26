@@ -6,6 +6,8 @@ import { LIBRARY_BOOKS, SHELF_ORDER } from "./data/library";
 import villageGlows from "./data/village-glows.json";
 import villageSky from "./data/village-sky.json";
 
+const CONTACT_EMAIL = "emailweaver@gmail.com";
+
 type ScreenId = "status" | "journey" | "quests" | "library" | "contact";
 type ViewState = "start" | "map" | ScreenId;
 
@@ -105,7 +107,7 @@ const MAP_HOTSPOTS: Hotspot[] = [
     y: 36,
     w: 19,
     h: 36,
-    description: "Email, LinkedIn, and simple ways to connect.",
+    description: "Send a signal flare by email or LinkedIn.",
   },
 ];
 
@@ -164,8 +166,7 @@ const WORLDS: World[] = [
     image: "/images/nes/weavers-house.webp",
     alt: "Pixel art interior of Weaver's House for the contact section",
     panelPosition: "md:bottom-8 md:right-8",
-    body: "If you want to compare notes, talk about a role, discuss a project, or send a signal flare, this is the right room.",
-    items: ["Email: emailweaver@gmail.com", "LinkedIn: jasonweaver"],
+    body: "Hiring for a role, working on a project, or just want to compare notes? Send a signal flare.",
   },
 ];
 
@@ -336,7 +337,17 @@ function AmbientGlowLayer({ glow }: { glow: AmbientGlow }) {
   );
 }
 
-function PixelLink({ href, children, variant = "gold" }: { href: string; children: React.ReactNode; variant?: "gold" | "blue" }) {
+function PixelLink({
+  href,
+  children,
+  variant = "gold",
+  newTab = false,
+}: {
+  href: string;
+  children: React.ReactNode;
+  variant?: "gold" | "blue";
+  newTab?: boolean;
+}) {
   const variantClass =
     variant === "gold"
       ? "border-[#f6d365] bg-[#3b250a] text-[#fff5bf] hover:bg-[#5a390f] focus-visible:ring-[#f6d365]"
@@ -345,10 +356,45 @@ function PixelLink({ href, children, variant = "gold" }: { href: string; childre
   return (
     <a
       href={href}
+      {...(newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
       className={`pixel-button inline-flex min-h-11 items-center justify-center border-2 px-5 py-3 text-xs font-bold tracking-[0.16em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050816] ${variantClass}`}
     >
       {children}
     </a>
+  );
+}
+
+// The EMAIL button relies on a mail app being set up, which many desktops lack,
+// so the address can also be copied straight to the clipboard.
+function CopyEmail() {
+  const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(CONTACT_EMAIL);
+      setStatus("copied");
+      window.setTimeout(() => setStatus("idle"), 2000);
+    } catch {
+      // Some browsers refuse clipboard access; show the address to select instead.
+      setStatus("failed");
+    }
+  }
+
+  return (
+    <p className="mt-3 text-xs leading-5 text-[#a9bde3] md:text-sm">
+      No mail app?{" "}
+      <button
+        type="button"
+        onClick={copy}
+        className="font-semibold text-white underline decoration-[#f6d365]/60 underline-offset-4 hover:text-[#f6d365] hover:decoration-[#f6d365] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f6d365]"
+      >
+        Copy my email
+      </button>
+      <span aria-live="polite" className="ml-2 text-[#f6d365]">
+        {status === "copied" ? "Copied!" : null}
+        {status === "failed" ? <span className="select-all text-white">{CONTACT_EMAIL}</span> : null}
+      </span>
+    </p>
   );
 }
 
@@ -663,9 +709,14 @@ function WorldScreen({ world, onBack }: { world: World; onBack: () => void }) {
                 </ul>
               ) : null}
               {world.id === "contact" ? (
-                <div className="mb-6 flex flex-wrap gap-3">
-                  <PixelLink href="mailto:emailweaver@gmail.com">EMAIL</PixelLink>
-                  <PixelLink href="https://www.linkedin.com/in/jasonweaver/" variant="blue">LINKEDIN</PixelLink>
+                <div className="mb-6">
+                  <div className="flex flex-wrap gap-3">
+                    <PixelLink href={`mailto:${CONTACT_EMAIL}`}>EMAIL</PixelLink>
+                    <PixelLink href="https://www.linkedin.com/in/jasonweaver/" variant="blue" newTab>
+                      LINKEDIN
+                    </PixelLink>
+                  </div>
+                  <CopyEmail />
                 </div>
               ) : null}
               <div className="flex flex-wrap items-center justify-between gap-4 border-t-2 border-[#f8f4d8]/30 pt-5">
