@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { JOURNEY_STOPS, JOURNEY_SUMMIT } from "./data/journey";
 import { LIBRARY_BOOKS, SHELF_ORDER } from "./data/library";
 import villageGlows from "./data/village-glows.json";
 import villageSky from "./data/village-sky.json";
@@ -77,7 +78,7 @@ const MAP_HOTSPOTS: Hotspot[] = [
     y: 34,
     w: 16,
     h: 23,
-    description: "Career path, leadership history, and platform operations experience.",
+    description: "Follow the trail from a first job to the summit.",
   },
   {
     id: "quests",
@@ -131,12 +132,7 @@ const WORLDS: World[] = [
     image: "/images/nes/mountain-trail.webp",
     alt: "Pixel art mountain trail for the journey section",
     panelPosition: "md:bottom-8 md:left-8",
-    body: "20+ years leading global platform operations, cloud platforms, and high-performing teams at scale. The trail runs through infrastructure, operations, leadership, and transformation.",
-    items: [
-      "Global platform operations",
-      "Cloud and infrastructure leadership",
-      "Team building through complex change",
-    ],
+    body: "Every hero starts somewhere. Follow the signposts up the trail, from a first job in Reno to the summit.",
   },
   {
     id: "quests",
@@ -733,6 +729,108 @@ function WorldScreen({ world, onBack }: { world: World; onBack: () => void }) {
   );
 }
 
+// The Journey room swaps the usual copy panel for numbered signposts on the
+// trail. Choosing one opens its chapter in a dialog box, which sits in the sky
+// on wide screens and under the picture on phones.
+function JourneyScreen({ world, onBack, onCastle }: { world: World; onBack: () => void; onCastle: () => void }) {
+  const [stop, setStop] = useState(-1);
+  const chapter = stop >= 0 ? JOURNEY_STOPS[stop] : null;
+  const isLast = stop === JOURNEY_STOPS.length - 1;
+
+  return (
+    <section className="screen-stage bg-[#050816] px-4 py-5 md:px-8 md:py-8">
+      <div className="screen-transition mx-auto flex min-h-[calc(100dvh-2.5rem)] max-w-7xl items-center md:min-h-[calc(100dvh-4rem)]">
+        <div className="relative mx-auto w-[min(100%,calc((100dvh-2.5rem)*4/3))] border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
+          <div className="relative aspect-[4/3] w-full overflow-hidden">
+            <img src={world.image} alt={world.alt} className="block h-full w-full object-cover pixel-art" loading="lazy" decoding="async" />
+
+            {JOURNEY_STOPS.map((item, index) => {
+              const active = index === stop;
+              return (
+                <button
+                  key={item.title}
+                  type="button"
+                  onClick={() => setStop(index)}
+                  aria-label={`Stop ${index + 1}: ${item.title}, ${item.when}`}
+                  aria-pressed={active}
+                  className={`pixel-heading absolute z-10 flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center border-2 text-sm leading-none shadow-[0_3px_0_rgba(0,0,0,0.55)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white md:h-10 md:w-10 md:border-4 md:text-xl ${
+                    active
+                      ? "border-white bg-[#f6d365] text-[#2a1a05]"
+                      : "border-[#f6d365] bg-[#3b250a] text-[#fff5bf] hover:bg-[#5a390f]"
+                  } ${stop === -1 && index === 0 ? "animate-bounce" : ""}`}
+                  style={{ left: `${item.x}%`, top: `${item.y}%` }}
+                >
+                  {index + 1}
+                </button>
+              );
+            })}
+
+            <a
+              href="#status"
+              onClick={onCastle}
+              aria-label="Summit: continue to the Castle"
+              className="pixel-heading absolute z-10 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 border-2 border-white bg-[#102a56] px-2 py-1 text-[10px] leading-none tracking-[0.12em] text-white shadow-[0_3px_0_rgba(0,0,0,0.55)] hover:bg-[#183d78] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white md:border-4 md:px-3 md:py-2 md:text-sm"
+              style={{ left: `${JOURNEY_SUMMIT.x}%`, top: `${JOURNEY_SUMMIT.y}%` }}
+            >
+              ▲ CASTLE
+            </a>
+          </div>
+
+          <div className="relative z-20 md:absolute md:left-6 md:top-6 md:w-[min(34rem,46%)]">
+            <div className="nes-panel border-t-4 border-[#f8f4d8] bg-[#07101f]/95 p-5 text-[#fff8d8] shadow-[0_-4px_0_#101828] md:border-4 md:p-6 md:shadow-[0_0_0_4px_#101828,0_16px_0_rgba(0,0,0,0.35)]">
+              {chapter ? (
+                <div aria-live="polite">
+                  <p className="pixel-heading mb-1 text-xs tracking-[0.14em] text-[#8ca6d9]">
+                    STOP {stop + 1} OF {JOURNEY_STOPS.length} · {chapter.when}
+                  </p>
+                  <h2 className="pixel-heading mb-1 text-2xl leading-tight text-[#f6d365] md:text-3xl">{chapter.title}</h2>
+                  <p className="mb-3 text-xs tracking-[0.06em] text-[#c5d9ff] md:text-sm">{chapter.where}</p>
+                  <p className="mb-5 text-sm leading-6 text-[#f4e7bd] md:text-base md:leading-7">{chapter.story}</p>
+                </div>
+              ) : (
+                <div aria-live="polite">
+                  <h2 className="pixel-heading mb-3 text-3xl leading-tight text-white md:text-4xl">{world.title}</h2>
+                  <p className="mb-5 text-sm leading-6 text-[#f4e7bd] md:text-base md:leading-7">{world.body}</p>
+                </div>
+              )}
+
+              <div className="flex flex-wrap items-center gap-3 border-t-2 border-[#f8f4d8]/30 pt-4">
+                {stop > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setStop(stop - 1)}
+                    className="pixel-button inline-flex min-h-11 items-center justify-center border-2 border-[#8ec5ff] bg-[#102a56] px-4 py-3 text-xs font-bold tracking-[0.16em] text-[#dff1ff] transition-colors hover:bg-[#183d78] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8ec5ff]"
+                  >
+                    ◀ BACK
+                  </button>
+                ) : null}
+                {isLast ? (
+                  <PixelAction href="#status" onNavigate={onCastle}>TO THE CASTLE ▶</PixelAction>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setStop(stop + 1)}
+                    className="pixel-button inline-flex min-h-11 items-center justify-center border-2 border-[#f6d365] bg-[#3b250a] px-4 py-3 text-xs font-bold tracking-[0.16em] text-[#fff5bf] transition-colors hover:bg-[#5a390f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f6d365]"
+                  >
+                    {stop === -1 ? "BEGIN ▶" : "NEXT ▶"}
+                  </button>
+                )}
+                <a
+                  href="#map"
+                  onClick={onBack}
+                  className="ml-auto text-xs tracking-[0.12em] text-[#8ca6d9] underline underline-offset-4 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f6d365]"
+                >
+                  RETURN TO VILLAGE
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function Home() {
   const [view, setView] = useState<ViewState>("start");
 
@@ -769,7 +867,11 @@ export default function Home() {
     <main className="min-h-[100dvh] overflow-hidden bg-[#050816] text-white">
       {view === "start" ? <StartScreen onStart={() => goTo("map")} /> : null}
       {view === "map" ? <MapHub onSelect={goTo} /> : null}
-      {activeWorld ? <WorldScreen key={activeWorld.id} world={activeWorld} onBack={() => goTo("map")} /> : null}
+      {activeWorld?.id === "journey" ? (
+        <JourneyScreen world={activeWorld} onBack={() => goTo("map")} onCastle={() => goTo("status")} />
+      ) : activeWorld ? (
+        <WorldScreen key={activeWorld.id} world={activeWorld} onBack={() => goTo("map")} />
+      ) : null}
     </main>
   );
 }
