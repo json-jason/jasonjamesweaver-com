@@ -78,7 +78,7 @@ const MAP_HOTSPOTS: Hotspot[] = [
     y: 34,
     w: 16,
     h: 23,
-    description: "Follow the trail from a first job to the summit.",
+    description: "Follow my trail from college to the summit.",
   },
   {
     id: "quests",
@@ -132,7 +132,7 @@ const WORLDS: World[] = [
     image: "/images/nes/mountain-trail.webp",
     alt: "Pixel art mountain trail for the journey section",
     panelPosition: "md:bottom-8 md:left-8",
-    body: "Every hero starts somewhere. Follow the signposts up the trail, from a first job in Reno to the summit.",
+    body: "Every hero starts somewhere. Mine was college in Reno. Follow the signposts up the trail to see where it led.",
   },
   {
     id: "quests",
@@ -153,7 +153,7 @@ const WORLDS: World[] = [
     image: "/images/nes/library.webp",
     alt: "Pixel art library shelves for the library section",
     panelPosition: "md:bottom-8 md:left-8",
-    body: "Books worth your time, organized by what they're good for.",
+    body: "My shelf of books worth your time, sorted by what they're good for.",
     sections: LIBRARY_SECTIONS,
   },
   {
@@ -776,16 +776,16 @@ function JourneyScreen({ world, onBack, onCastle }: { world: World; onBack: () =
             </a>
           </div>
 
-          <div className="relative z-20 md:absolute md:left-6 md:top-6 md:w-[min(34rem,46%)]">
-            <div className="nes-panel border-t-4 border-[#f8f4d8] bg-[#07101f]/95 p-5 text-[#fff8d8] shadow-[0_-4px_0_#101828] md:border-4 md:p-6 md:shadow-[0_0_0_4px_#101828,0_16px_0_rgba(0,0,0,0.35)]">
+          <div className="relative z-20 md:absolute md:left-4 md:top-4 md:w-[min(38rem,52%)] lg:left-6 lg:top-6">
+            <div className="nes-panel border-t-4 border-[#f8f4d8] bg-[#07101f]/95 p-5 text-[#fff8d8] shadow-[0_-4px_0_#101828] md:border-4 md:p-4 md:shadow-[0_0_0_4px_#101828,0_16px_0_rgba(0,0,0,0.35)] lg:p-6">
               {chapter ? (
                 <div aria-live="polite">
                   <p className="pixel-heading mb-1 text-xs tracking-[0.14em] text-[#8ca6d9]">
                     STOP {stop + 1} OF {JOURNEY_STOPS.length} · {chapter.when}
                   </p>
-                  <h2 className="pixel-heading mb-1 text-2xl leading-tight text-[#f6d365] md:text-3xl">{chapter.title}</h2>
+                  <h2 className="pixel-heading mb-1 text-2xl leading-tight text-[#f6d365] lg:text-3xl">{chapter.title}</h2>
                   <p className="mb-3 text-xs tracking-[0.06em] text-[#c5d9ff] md:text-sm">{chapter.where}</p>
-                  <p className="mb-5 text-sm leading-6 text-[#f4e7bd] md:text-base md:leading-7">{chapter.story}</p>
+                  <p className="mb-4 text-sm leading-6 text-[#f4e7bd] lg:mb-5 lg:text-base lg:leading-7">{chapter.story}</p>
                 </div>
               ) : (
                 <div aria-live="polite">
@@ -794,7 +794,7 @@ function JourneyScreen({ world, onBack, onCastle }: { world: World; onBack: () =
                 </div>
               )}
 
-              <div className="flex flex-wrap items-center gap-3 border-t-2 border-[#f8f4d8]/30 pt-4">
+              <div className="flex flex-wrap items-center gap-3 border-t-2 border-[#f8f4d8]/30 pt-3 lg:pt-4">
                 {stop > 0 ? (
                   <button
                     type="button"
