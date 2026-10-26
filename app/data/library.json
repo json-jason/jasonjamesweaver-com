@@ -3,40 +3,46 @@
     "shelf": "Personal Growth / Philosophy",
     "title": "A New Earth",
     "author": "Eckhart Tolle",
-    "why": "Helps you recognize the ego's influence and become more present in everyday life."
+    "why": "Helps you recognize the ego's influence and become more present in everyday life.",
+    "buyLink": "https://bookshop.org/a/130376/9780452289963"
   },
   {
     "shelf": "Personal Growth / Philosophy",
     "title": "The Art of Happiness",
     "author": "Dalai Lama & Howard C. Cutler",
     "why": "Shows that happiness is a skill that can be intentionally cultivated.",
-    "coverId": "51LZfA8ZIpL"
+    "coverId": "51LZfA8ZIpL",
+    "buyLink": "https://bookshop.org/a/130376/9781594488894"
   },
   {
     "shelf": "Personal Growth / Philosophy",
     "title": "Radical Acceptance",
     "author": "Tara Brach",
     "why": "Teaches that genuine change begins with self-acceptance rather than self-criticism.",
-    "coverId": "41ACQO0pPHL"
+    "coverId": "41ACQO0pPHL",
+    "buyLink": "https://bookshop.org/a/130376/9780553380996"
   },
   {
     "shelf": "Personal Growth / Philosophy",
     "title": "You Are Here",
     "author": "Thich Nhat Hanh",
-    "why": "A gentle introduction to mindfulness and fully experiencing the present moment."
+    "why": "A gentle introduction to mindfulness and fully experiencing the present moment.",
+    "buyLink": "https://bookshop.org/a/130376/9781645472414"
   },
   {
     "shelf": "Personal Growth / Philosophy",
     "title": "Four Thousand Weeks",
     "author": "Oliver Burkeman",
     "why": "Reframes productivity by embracing the reality that your time is finite.",
-    "coverId": "41R1ko4SKtL"
+    "coverId": "41R1ko4SKtL",
+    "buyLink": "https://bookshop.org/a/130376/9780374159122"
   },
   {
     "shelf": "Personal Growth / Philosophy",
     "title": "The Big Leap",
     "author": "Gay Hendricks",
-    "why": "Explores why we sabotage ourselves just as life starts going well, and how to stop."
+    "why": "Explores why we sabotage ourselves just as life starts going well, and how to stop.",
+    "buyLink": "https://bookshop.org/a/130376/9780061735363"
   },
   {
     "shelf": "Personal Growth / Philosophy",
@@ -49,32 +55,37 @@
     "title": "Anything You Want",
     "author": "Derek Sivers",
     "why": "A short, inspiring blueprint for building a business around freedom, purpose, and simplicity.",
-    "coverId": "413Q2S5sciL"
+    "coverId": "413Q2S5sciL",
+    "buyLink": "https://bookshop.org/a/130376/9781991153319"
   },
   {
     "shelf": "Business / Entrepreneurship",
     "title": "Rework",
     "author": "Jason Fried & David Heinemeier Hansson",
     "why": "Challenges conventional business wisdom with practical advice for doing more with less.",
-    "coverId": "41jq-ouUBkL"
+    "coverId": "41jq-ouUBkL",
+    "buyLink": "https://bookshop.org/a/130376/9780307463746"
   },
   {
     "shelf": "Resilience",
     "title": "Iron Hope",
     "author": "James Lawrence",
     "why": "A reminder that extraordinary achievements are built through grit, consistency, and refusing to quit.",
-    "coverId": "41BGrw8MXrL"
+    "coverId": "41BGrw8MXrL",
+    "buyLink": "https://bookshop.org/a/130376/9781250326782"
   },
   {
     "shelf": "Memoir / Travel / Culture",
     "title": "Travels with Charley",
     "author": "John Steinbeck",
-    "why": "A thoughtful journey across America that reveals as much about people and place as it does about the author."
+    "why": "A thoughtful journey across America that reveals as much about people and place as it does about the author.",
+    "buyLink": "https://bookshop.org/a/130376/9780143107002"
   },
   {
     "shelf": "Memoir / Travel / Culture",
     "title": "Extra Virginity",
     "author": "Tom Mueller",
-    "why": "An eye-opening look at olive oil, food fraud, craftsmanship, and why quality matters."
+    "why": "An eye-opening look at olive oil, food fraud, craftsmanship, and why quality matters.",
+    "buyLink": "https://bookshop.org/a/130376/9780393070217"
   }
 ]

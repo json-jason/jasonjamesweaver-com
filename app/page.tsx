@@ -24,6 +24,7 @@ type BookEntry = {
   title: string;
   author: string;
   note: string;
+  buyLink?: string;
 };
 
 type BookSection = {
@@ -40,6 +41,7 @@ const LIBRARY_SECTIONS: BookSection[] = SHELF_ORDER.map((heading) => ({
     title: book.title,
     author: book.author,
     note: book.why,
+    buyLink: book.buyLink,
   })),
 })).filter((section) => section.books.length > 0);
 
@@ -623,7 +625,18 @@ function WorldScreen({ world, onBack }: { world: World; onBack: () => void }) {
                           <li key={book.title} className="flex gap-3">
                             <span className="text-[#f6d365]">&gt;</span>
                             <span>
-                              <span className="font-semibold text-white">{book.title}</span>
+                              {book.buyLink ? (
+                                <a
+                                  href={book.buyLink}
+                                  target="_blank"
+                                  rel="sponsored noopener noreferrer"
+                                  className="font-semibold text-white underline decoration-[#f6d365]/60 underline-offset-4 hover:text-[#f6d365] hover:decoration-[#f6d365] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f6d365]"
+                                >
+                                  {book.title}
+                                </a>
+                              ) : (
+                                <span className="font-semibold text-white">{book.title}</span>
+                              )}
                               <span className="text-[#c5d9ff]"> — {book.author}</span>
                               <br />
                               <span className="text-xs text-[#a9bde3] md:text-sm">{book.note}</span>
@@ -633,6 +646,11 @@ function WorldScreen({ world, onBack }: { world: World; onBack: () => void }) {
                       </ul>
                     </div>
                   ))}
+                  {world.sections.some((section) => section.books.some((book) => book.buyLink)) ? (
+                    <p className="mt-4 border-t-2 border-[#f8f4d8]/20 pt-3 text-xs leading-5 text-[#a9bde3]">
+                      Book links go to Bookshop.org, which supports independent bookstores. I earn a small commission if you buy through them.
+                    </p>
+                  ) : null}
                 </div>
               ) : world.items ? (
                 <ul className="mb-6 grid gap-2 text-sm leading-6 text-[#d9e8ff] md:text-base">

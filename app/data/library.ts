@@ -6,6 +6,7 @@ export type LibraryBook = {
   author: string;
   why: string;
   coverId?: string;
+  buyLink?: string;
 };
 
 export const LIBRARY_BOOKS = libraryBooks as LibraryBook[];
