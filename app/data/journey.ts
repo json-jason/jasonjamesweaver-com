@@ -35,7 +35,7 @@ export const JOURNEY_STOPS: JourneyStop[] = [
     when: "2008–2016",
     where: "Reno, NV · Amsterdam, The Netherlands",
     story:
-      "I joined IGT in Reno as a Systems Engineer in 2008. Then I went after a role in Amsterdam, applied, and won it. From there I led first deployments in Austria, Slovenia, Iceland and France, and built local caching so content could reach sites on slow connections.",
+      "I joined IGT in Reno as a Systems Engineer in 2008. Eager to broaden my horizons and grow my skills, I took a role in Amsterdam. From there I led first deployments in Austria, Slovenia, Iceland and France, and built caching for sites on slow connections.",
     x: 29.7,
     y: 68.6,
   },
