@@ -107,7 +107,7 @@ const MAP_HOTSPOTS: Hotspot[] = [
     y: 36,
     w: 19,
     h: 36,
-    description: "Send a signal flare by email or LinkedIn.",
+    description: "Come in! The door is always open.",
   },
 ];
 
@@ -166,7 +166,7 @@ const WORLDS: World[] = [
     image: "/images/nes/weavers-house.webp",
     alt: "Pixel art interior of Weaver's House for the contact section",
     panelPosition: "md:bottom-8 md:right-8",
-    body: "Hiring for a role, working on a project, or just want to compare notes? Send a signal flare.",
+    body: "Ah, a visitor! Hiring a hero, or starting a quest of your own? Choose your path below.",
   },
 ];
 
