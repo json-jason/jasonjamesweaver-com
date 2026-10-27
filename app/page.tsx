@@ -70,7 +70,7 @@ const MAP_HOTSPOTS: Hotspot[] = [
     y: 23.5,
     w: 15,
     h: 16,
-    description: "The business I co-founded: Black Belt Cybersecurity.",
+    description: "The business I\u00a0co\u2011founded: Black Belt Cybersecurity.",
   },
   {
     id: "journey",
@@ -121,7 +121,7 @@ const WORLDS: World[] = [
     image: "/images/nes/castle.webp",
     alt: "Pixel art castle throne room with banners, a crest and a great door",
     panelPosition: "md:bottom-8 md:right-8",
-    body: "Welcome to the castle! This hall shows off the business I co-founded: Black Belt Cybersecurity. Explore the room to learn more.",
+    body: "Welcome to the castle! This hall shows off the business I\u00a0co\u2011founded: Black Belt Cybersecurity. Explore the room to learn more.",
   },
   {
     id: "journey",
@@ -893,7 +893,7 @@ function ObjectRoom({
                     {project.object} · {project.tag}
                   </p>
                   <h2 className={`pixel-heading mb-2 text-xl leading-tight roomy:mb-3 roomy:text-3xl ${scroll ? "text-[#8a1c12]" : "text-[#f6d365]"}`}>{project.title}</h2>
-                  <p className={`mb-3 text-[13px] leading-5 roomy:mb-5 roomy:text-base roomy:leading-7 ${scroll ? "text-[#3b2410]" : "text-[#f4e7bd]"}`}>{project.story}</p>
+                  <p className={`mb-3 whitespace-pre-line text-[13px] leading-5 roomy:mb-5 roomy:text-base roomy:leading-7 ${scroll ? "text-[#3b2410]" : "text-[#f4e7bd]"}`}>{project.story}</p>
                 </div>
               ) : (
                 <div aria-live="polite">

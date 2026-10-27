@@ -12,7 +12,7 @@ export const CASTLE_ROOMS: ForgeProject[] = [
     title: "Why it exists",
     tag: "The gap",
     story:
-      "Walk through a well-protected home in Los Angeles: cameras, a gate, a monitored alarm, good locks. Then ask when anyone last checked the computers inside. The answer is almost always never. It is nobody's job. So we are making it ours.",
+      "Walk through a well-protected home in Los Angeles: cameras, a gate, a monitored alarm, good locks. Then ask when anyone last checked the computers inside. The answer is almost always never. It is nobody's job.\nSo we are making it ours.",
     box: { x: 16.5, y: 14.5, w: 5, h: 35.5 },
   },
   {
@@ -36,7 +36,7 @@ export const CASTLE_ROOMS: ForgeProject[] = [
     title: "About the name",
     tag: "Real black belts",
     story:
-      "Yes, we have real black belts: one in Tae Kwon Do, one in Jiu-Jitsu. They are not security credentials. To us, a black belt means the basics drilled so well that you spot the opening before someone uses it. That is the whole job.",
+      "Yes, we have real black belts: one in Tae Kwon Do, one in Jiu-Jitsu. They are not security credentials. To us, a black belt means the basics drilled so well that you spot the opening before someone uses it.",
     box: { x: 85.2, y: 15, w: 6.4, h: 11.5 },
   },
   {
