@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-import { FORGE_PROJECTS } from "./data/forge";
+import { CASTLE_ROOMS } from "./data/castle";
+import { FORGE_PROJECTS, type ForgeProject } from "./data/forge";
 import { JOURNEY_STOPS, JOURNEY_SUMMIT } from "./data/journey";
 import { LIBRARY_BOOKS, SHELF_ORDER } from "./data/library";
 import villageGlows from "./data/village-glows.json";
@@ -69,7 +70,7 @@ const MAP_HOTSPOTS: Hotspot[] = [
     y: 23.5,
     w: 15,
     h: 16,
-    description: "Current focus, operating style, and what I am building.",
+    description: "The business I co-founded: Black Belt Cybersecurity.",
   },
   {
     id: "journey",
@@ -118,14 +119,9 @@ const WORLDS: World[] = [
     id: "status",
     title: "CASTLE",
     image: "/images/nes/castle.webp",
-    alt: "Pixel art castle hall for the status section",
+    alt: "Pixel art castle throne room with banners, a crest and a great door",
     panelPosition: "md:bottom-8 md:right-8",
-    body: "Technology leader, AI explorer, and builder of systems. I like practical tools, capable teams, clear thinking, and work that improves how people operate.",
-    items: [
-      "Current focus: AI agents and automation",
-      "Operating style: calm, structured, practical",
-      "Direction: better systems for work and life",
-    ],
+    body: "Welcome to the castle. This is the business I co-founded with my cousin: Black Belt Cybersecurity. Explore the banners, the crest and the door.",
   },
   {
     id: "journey",
@@ -830,10 +826,22 @@ function JourneyScreen({ world, onBack, onCastle }: { world: World; onBack: () =
 // The Blacksmith room: each project is an object in the forge. Objects glow
 // on hover and open their story in a dialog box, which sits over the empty
 // workbench corner on wide screens and under the picture on phones.
-function ForgeScreen({ world, onBack }: { world: World; onBack: () => void }) {
+// A room of glowing objects that each open a story. The Blacksmith uses the
+// navy NES box; the Castle passes `scroll` for a parchment one.
+function ObjectRoom({
+  world,
+  items,
+  scroll = false,
+  onBack,
+}: {
+  world: World;
+  items: ForgeProject[];
+  scroll?: boolean;
+  onBack: () => void;
+}) {
   const [pick, setPick] = useState(-1);
-  const project = pick >= 0 ? FORGE_PROJECTS[pick] : null;
-  const isLast = pick === FORGE_PROJECTS.length - 1;
+  const project = pick >= 0 ? items[pick] : null;
+  const isLast = pick === items.length - 1;
 
   return (
     <section className="screen-stage bg-[#050816] px-4 py-5 md:px-8 md:py-8">
@@ -842,7 +850,7 @@ function ForgeScreen({ world, onBack }: { world: World; onBack: () => void }) {
           <div className="relative aspect-[4/3] w-full overflow-hidden">
             <img src={world.image} alt={world.alt} className="block h-full w-full object-cover pixel-art" loading="lazy" decoding="async" />
 
-            {FORGE_PROJECTS.map((item, index) => {
+            {items.map((item, index) => {
               const active = index === pick;
               const labelBelow = item.box.y < 20;
               return (
@@ -872,23 +880,29 @@ function ForgeScreen({ world, onBack }: { world: World; onBack: () => void }) {
           </div>
 
           <div className="relative z-20 md:absolute md:bottom-3 md:left-3 md:w-[min(34rem,42%)] roomy:bottom-6 roomy:left-6">
-            <div className="nes-panel border-t-4 border-[#f8f4d8] bg-[#07101f]/95 p-5 text-[#fff8d8] shadow-[0_-4px_0_#101828] md:border-4 md:p-4 md:shadow-[0_0_0_4px_#101828,0_16px_0_rgba(0,0,0,0.35)] roomy:p-6">
+            <div
+              className={`nes-panel border-t-4 p-5 md:border-4 md:p-4 roomy:p-6 ${
+                scroll
+                  ? "border-[#5a3a1a] bg-[#f1e3b8] text-[#3b2410] shadow-[0_-4px_0_#2a1a0a] outline outline-2 -outline-offset-[10px] outline-[#a8834a] md:shadow-[0_0_0_4px_#2a1a0a,0_16px_0_rgba(0,0,0,0.35)]"
+                  : "border-[#f8f4d8] bg-[#07101f]/95 text-[#fff8d8] shadow-[0_-4px_0_#101828] md:shadow-[0_0_0_4px_#101828,0_16px_0_rgba(0,0,0,0.35)]"
+              }`}
+            >
               {project ? (
                 <div aria-live="polite">
-                  <p className="pixel-heading mb-1 text-xs tracking-[0.14em] text-[#8ca6d9]">
+                  <p className={`pixel-heading mb-1 text-xs tracking-[0.14em] ${scroll ? "text-[#7a5a2e]" : "text-[#8ca6d9]"}`}>
                     {project.object} · {project.tag}
                   </p>
-                  <h2 className="pixel-heading mb-2 text-xl leading-tight text-[#f6d365] roomy:mb-3 roomy:text-3xl">{project.title}</h2>
-                  <p className="mb-3 text-[13px] leading-5 text-[#f4e7bd] roomy:mb-5 roomy:text-base roomy:leading-7">{project.story}</p>
+                  <h2 className={`pixel-heading mb-2 text-xl leading-tight roomy:mb-3 roomy:text-3xl ${scroll ? "text-[#8a1c12]" : "text-[#f6d365]"}`}>{project.title}</h2>
+                  <p className={`mb-3 text-[13px] leading-5 roomy:mb-5 roomy:text-base roomy:leading-7 ${scroll ? "text-[#3b2410]" : "text-[#f4e7bd]"}`}>{project.story}</p>
                 </div>
               ) : (
                 <div aria-live="polite">
-                  <h2 className="pixel-heading mb-3 text-3xl leading-tight text-white md:text-4xl">{world.title}</h2>
-                  <p className="mb-5 text-sm leading-6 text-[#f4e7bd] md:text-base md:leading-7">{world.body}</p>
+                  <h2 className={`pixel-heading mb-3 text-3xl leading-tight md:text-4xl ${scroll ? "text-[#8a1c12]" : "text-white"}`}>{world.title}</h2>
+                  <p className={`mb-5 text-sm leading-6 md:text-base md:leading-7 ${scroll ? "text-[#3b2410]" : "text-[#f4e7bd]"}`}>{world.body}</p>
                 </div>
               )}
 
-              <div className="flex flex-wrap items-center gap-3 border-t-2 border-[#f8f4d8]/30 pt-3 roomy:pt-4">
+              <div className={`flex flex-wrap items-center gap-3 border-t-2 pt-3 roomy:pt-4 ${scroll ? "border-[#5a3a1a]/30" : "border-[#f8f4d8]/30"}`}>
                 {pick > 0 ? (
                   <button
                     type="button"
@@ -907,10 +921,20 @@ function ForgeScreen({ world, onBack }: { world: World; onBack: () => void }) {
                     {pick === -1 ? "BEGIN ▶" : "NEXT ▶"}
                   </button>
                 ) : null}
+                {project?.link ? (
+                  <a
+                    href={project.link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="pixel-button inline-flex min-h-11 items-center justify-center border-2 border-[#f6d365] bg-[#3b250a] px-4 py-3 text-xs font-bold tracking-[0.16em] text-[#fff5bf] transition-colors hover:bg-[#5a390f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f6d365]"
+                  >
+                    {project.link.label}
+                  </a>
+                ) : null}
                 <a
                   href="#map"
                   onClick={onBack}
-                  className="ml-auto text-xs tracking-[0.12em] text-[#8ca6d9] underline underline-offset-4 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f6d365]"
+                  className={`ml-auto text-xs tracking-[0.12em] underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f6d365] ${scroll ? "text-[#7a5a2e] hover:text-[#3b2410]" : "text-[#8ca6d9] hover:text-white"}`}
                 >
                   RETURN TO VILLAGE
                 </a>
@@ -960,7 +984,9 @@ export default function Home() {
       {view === "start" ? <StartScreen onStart={() => goTo("map")} /> : null}
       {view === "map" ? <MapHub onSelect={goTo} /> : null}
       {activeWorld?.id === "quests" ? (
-        <ForgeScreen world={activeWorld} onBack={() => goTo("map")} />
+        <ObjectRoom key="quests" world={activeWorld} items={FORGE_PROJECTS} onBack={() => goTo("map")} />
+      ) : activeWorld?.id === "status" ? (
+        <ObjectRoom key="status" world={activeWorld} items={CASTLE_ROOMS} scroll onBack={() => goTo("map")} />
       ) : activeWorld?.id === "journey" ? (
         <JourneyScreen world={activeWorld} onBack={() => goTo("map")} onCastle={() => goTo("status")} />
       ) : activeWorld ? (

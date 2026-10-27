@@ -10,6 +10,7 @@ export type ForgeProject = {
   tag: string;
   story: string;
   box: { x: number; y: number; w: number; h: number };
+  link?: { href: string; label: string };
 };
 
 export const FORGE_PROJECTS: ForgeProject[] = [
