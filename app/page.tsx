@@ -121,7 +121,7 @@ const WORLDS: World[] = [
     image: "/images/nes/castle.webp",
     alt: "Pixel art castle throne room with banners, a crest and a great door",
     panelPosition: "md:bottom-8 md:right-8",
-    body: "Welcome to the castle. This is the business I co-founded with my cousin: Black Belt Cybersecurity. Explore the banners, the crest and the door.",
+    body: "Welcome to the castle! This hall shows off the business I co-founded: Black Belt Cybersecurity. Explore the room to learn more.",
   },
   {
     id: "journey",
@@ -928,7 +928,14 @@ function ObjectRoom({
                     rel="noopener noreferrer"
                     className="pixel-button inline-flex min-h-11 items-center justify-center border-2 border-[#f6d365] bg-[#3b250a] px-4 py-3 text-xs font-bold tracking-[0.16em] text-[#fff5bf] transition-colors hover:bg-[#5a390f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f6d365]"
                   >
-                    {project.link.label}
+                    {project.link.shortLabel ? (
+                      <>
+                        <span className="roomy:hidden">{project.link.shortLabel}</span>
+                        <span className="hidden roomy:inline">{project.link.label}</span>
+                      </>
+                    ) : (
+                      project.link.label
+                    )}
                   </a>
                 ) : null}
                 <a

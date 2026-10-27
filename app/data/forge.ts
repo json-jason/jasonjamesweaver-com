@@ -10,7 +10,8 @@ export type ForgeProject = {
   tag: string;
   story: string;
   box: { x: number; y: number; w: number; h: number };
-  link?: { href: string; label: string };
+  // `shortLabel` replaces `label` below the roomy breakpoint, where the full label would wrap.
+  link?: { href: string; label: string; shortLabel?: string };
 };
 
 export const FORGE_PROJECTS: ForgeProject[] = [
