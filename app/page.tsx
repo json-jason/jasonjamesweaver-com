@@ -114,6 +114,13 @@ const MAP_HOTSPOTS: Hotspot[] = [
   },
 ];
 
+// The button list under the map (phones and tablets) reads as the tour is
+// meant to flow: meet me, see what I build, what I read, where I came from,
+// and end at the castle. The map's own hotspots keep their order, which sets
+// how they stack where they sit close together.
+const MAP_LIST_ORDER: ScreenId[] = ["contact", "quests", "library", "journey", "status"];
+const MAP_LIST = MAP_LIST_ORDER.map((id) => MAP_HOTSPOTS.find((spot) => spot.id === id)!);
+
 const WORLDS: World[] = [
   {
     id: "status",
@@ -555,68 +562,75 @@ function MapHub({ onSelect }: { onSelect: (screen: ScreenId) => void }) {
           </div>
         </div>
 
-        <div className="relative mx-auto aspect-[4/3] w-[min(100%,calc((100dvh-12rem)*4/3))] overflow-hidden border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
-          <img src="/images/nes/village.webp" alt="Interactive pixel art village world map" className="block h-full w-full object-cover pixel-art" decoding="async" />
+        <div className="mx-auto w-[min(100%,calc((100dvh-12rem)*4/3))] border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
+          {/* The 4:3 box sits inside the border, not on it. With the ratio on the
+              bordered box, the picture area came out wider than 4:3, so the
+              painting was cropped top and bottom while the percentage-placed
+              layers were not, and every patch and the rooftop cut landed a few
+              pixels off. On a phone the border is a big share of the width. */}
+          <div className="relative aspect-[4/3] w-full overflow-hidden">
+            <img src="/images/nes/village.webp" alt="Interactive pixel art village world map" className="block h-full w-full object-cover pixel-art" decoding="async" />
 
-          {/* Distant movement, under the weather: the castle pennant. A cloud
-              crossing the castle should cross its flag too. */}
-          {DISTANT_GLOWS.map((glow) => (
-            <AmbientGlowLayer key={glow.name} glow={glow} />
-          ))}
+            {/* Distant movement, under the weather: the castle pennant. A cloud
+                crossing the castle should cross its flag too. */}
+            {DISTANT_GLOWS.map((glow) => (
+              <AmbientGlowLayer key={glow.name} glow={glow} />
+            ))}
 
-          {VILLAGE_CLOUDS.map((cloud) => (
-            <DriftingCloudLayer key={cloud.name} cloud={cloud} />
-          ))}
+            {VILLAGE_CLOUDS.map((cloud) => (
+              <DriftingCloudLayer key={cloud.name} cloud={cloud} />
+            ))}
 
-          {/* Rooftops back on top, so the clouds drift behind the village but
-              still in front of the castle. Anchored to the top of the frame
-              rather than stretched over it: the cut only covers the sky band,
-              and below that the painting already shows through. */}
-          <img
-            src={VILLAGE_FOREGROUND}
-            alt=""
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 top-0 h-auto w-full pixel-art"
-            decoding="async"
-          />
+            {/* Rooftops back on top, so the clouds drift behind the village but
+                still in front of the castle. Anchored to the top of the frame
+                rather than stretched over it: the cut only covers the sky band,
+                and below that the painting already shows through. */}
+            <img
+              src={VILLAGE_FOREGROUND}
+              alt=""
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-0 top-0 h-auto w-full pixel-art"
+              decoding="async"
+            />
 
-          {/* Then the things that stay put but move in place: smoke leaving
-              the two chimneys, the forge fire, the two door lanterns. All
-              under the hotspots so their tooltips still win. Decorative —
-              the map's meaning is in the buttons. */}
-          {VILLAGE_SMOKE.map((smoke) => (
-            <AmbientGlowLayer key={smoke.name} glow={smoke} />
-          ))}
-          {VILLAGE_GLOWS.map((glow) => (
-            <AmbientGlowLayer key={glow.name} glow={glow} />
-          ))}
+            {/* Then the things that stay put but move in place: smoke leaving
+                the two chimneys, the forge fire, the two door lanterns. All
+                under the hotspots so their tooltips still win. Decorative —
+                the map's meaning is in the buttons. */}
+            {VILLAGE_SMOKE.map((smoke) => (
+              <AmbientGlowLayer key={smoke.name} glow={smoke} />
+            ))}
+            {VILLAGE_GLOWS.map((glow) => (
+              <AmbientGlowLayer key={glow.name} glow={glow} />
+            ))}
 
-          {MAP_HOTSPOTS.map((spot) => {
-            // Centred tooltips under buildings near the map's edge get clipped
-            // by the frame, so those anchor to the building's outer side.
-            const centre = spot.x + spot.w / 2;
-            const tooltipAnchor =
-              centre < 25 ? "left-0" : centre > 75 ? "right-0" : "left-1/2 -translate-x-1/2";
-            return (
-            <button
-              type="button"
-              key={spot.id}
-              onClick={() => onSelect(spot.id)}
-              aria-label={`${spot.label}: ${spot.description}`}
-              className="group absolute rounded-sm outline-none transition-all duration-150 focus-visible:ring-2 focus-visible:ring-[#f8f4d8]/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050816]"
-              style={{ left: `${spot.x}%`, top: `${spot.y}%`, width: `${spot.w}%`, height: `${spot.h}%` }}
-            >
-              <span className={`pointer-events-none absolute ${tooltipAnchor} top-full z-20 mt-3 w-56 border-4 border-[#f8f4d8] bg-[#07101f]/95 p-3 text-left opacity-0 shadow-[0_0_0_3px_#101828,0_10px_0_rgba(0,0,0,0.35)] transition group-hover:opacity-100 group-focus-visible:opacity-100 md:w-72`}>
-                <span className="pixel-heading mb-2 block text-lg leading-none text-[#f6d365] md:text-2xl">{spot.title}</span>
-                <span className="block text-xs leading-5 text-[#d9e8ff] md:text-sm">{spot.description}</span>
-              </span>
-            </button>
-            );
-          })}
+            {MAP_HOTSPOTS.map((spot) => {
+              // Centred tooltips under buildings near the map's edge get clipped
+              // by the frame, so those anchor to the building's outer side.
+              const centre = spot.x + spot.w / 2;
+              const tooltipAnchor =
+                centre < 25 ? "left-0" : centre > 75 ? "right-0" : "left-1/2 -translate-x-1/2";
+              return (
+              <button
+                type="button"
+                key={spot.id}
+                onClick={() => onSelect(spot.id)}
+                aria-label={`${spot.label}: ${spot.description}`}
+                className="group absolute rounded-sm outline-none transition-all duration-150 focus-visible:ring-2 focus-visible:ring-[#f8f4d8]/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050816]"
+                style={{ left: `${spot.x}%`, top: `${spot.y}%`, width: `${spot.w}%`, height: `${spot.h}%` }}
+              >
+                <span className={`pointer-events-none absolute ${tooltipAnchor} top-full z-20 mt-3 w-56 border-4 border-[#f8f4d8] bg-[#07101f]/95 p-3 text-left opacity-0 shadow-[0_0_0_3px_#101828,0_10px_0_rgba(0,0,0,0.35)] transition group-hover:opacity-100 group-focus-visible:opacity-100 md:w-72`}>
+                  <span className="pixel-heading mb-2 block text-lg leading-none text-[#f6d365] md:text-2xl">{spot.title}</span>
+                  <span className="block text-xs leading-5 text-[#d9e8ff] md:text-sm">{spot.description}</span>
+                </span>
+              </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:hidden">
-          {MAP_HOTSPOTS.map((spot) => (
+          {MAP_LIST.map((spot) => (
             <button
               key={spot.id}
               type="button"
