@@ -26,7 +26,7 @@ export const FORGE_PROJECTS: ForgeProject[] = [
     title: "The Common Sense Clinic",
     tag: "Custom GPT",
     story:
-      "A custom GPT I built as my personal health advisory board. It weighs views from experts like Peter Attia, Layne Norton, Andy Galpin and Matthew Walker, puts strong evidence and the basics first, and separates settled science from speculation. It makes health information clearer. It does not replace a doctor.",
+      "A custom GPT I built as my personal health advisory board. It weighs views from experts like Peter Attia, Layne Norton, Andy Galpin and Matthew Walker, puts strong evidence and the basics first, and separates settled science from speculation. It makes health information clearer.",
     box: { x: 59.9, y: 26.2, w: 8.3, h: 11.1 },
   },
   {
@@ -42,7 +42,7 @@ export const FORGE_PROJECTS: ForgeProject[] = [
     title: "My AI agent",
     tag: "OpenClaw → Hermes",
     story:
-      "A personal AI agent I built on OpenClaw, then moved to Hermes. It does real work across my projects. For one, it helped me build a private dashboard of years of doctor visits and lab results, so I can spot trends at a glance. That data stays private.",
+      "A personal AI agent I built on OpenClaw, then moved to Hermes. It does real work across my projects. For one, it helped me build a private dashboard of years of doctor visits and lab results, so I can track my own blood markers and keep my doctor's notes in one place.",
     box: { x: 22.4, y: 27.2, w: 15.2, h: 9.4 },
   },
   {
