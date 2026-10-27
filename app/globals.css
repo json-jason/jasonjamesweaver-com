@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Room dialogs only grow their text when the screen is both wide and tall:
+   the picture is sized by height, so width alone says nothing about how much
+   room the dialog has before it covers the hotspots. */
+@custom-variant roomy (@media (min-width: 1280px) and (min-height: 850px));
+
 :root {
   --background: #050816;
   --foreground: #ffffff;

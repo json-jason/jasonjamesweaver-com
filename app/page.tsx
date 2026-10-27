@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { FORGE_PROJECTS } from "./data/forge";
 import { JOURNEY_STOPS, JOURNEY_SUMMIT } from "./data/journey";
 import { LIBRARY_BOOKS, SHELF_ORDER } from "./data/library";
 import villageGlows from "./data/village-glows.json";
@@ -88,7 +89,7 @@ const MAP_HOTSPOTS: Hotspot[] = [
     y: 42,
     w: 22,
     h: 35,
-    description: "AI tools, automation workflows, dashboards, and practical experiments.",
+    description: "The AI tools and agents I have forged.",
   },
   {
     id: "library",
@@ -140,12 +141,7 @@ const WORLDS: World[] = [
     image: "/images/nes/blacksmith.webp",
     alt: "Pixel art blacksmith workshop for the quests section",
     panelPosition: "md:bottom-8 md:right-8",
-    body: "This is where rough ideas get forged into working systems. The current bench includes AI assistants, automation workflows, health tools, and commerce experiments.",
-    items: [
-      "AI Coach and personal operating systems",
-      "Comments Clinic GPT and creator tools",
-      "Automation, dashboards, and practical experiments",
-    ],
+    body: "This is where I hammer rough ideas into working tools. Explore the glowing objects to see what I have built.",
   },
   {
     id: "library",
@@ -831,6 +827,102 @@ function JourneyScreen({ world, onBack, onCastle }: { world: World; onBack: () =
   );
 }
 
+// The Blacksmith room: each project is an object in the forge. Objects glow
+// on hover and open their story in a dialog box, which sits over the empty
+// workbench corner on wide screens and under the picture on phones.
+function ForgeScreen({ world, onBack }: { world: World; onBack: () => void }) {
+  const [pick, setPick] = useState(-1);
+  const project = pick >= 0 ? FORGE_PROJECTS[pick] : null;
+  const isLast = pick === FORGE_PROJECTS.length - 1;
+
+  return (
+    <section className="screen-stage bg-[#050816] px-4 py-5 md:px-8 md:py-8">
+      <div className="screen-transition mx-auto flex min-h-[calc(100dvh-2.5rem)] max-w-7xl items-center md:min-h-[calc(100dvh-4rem)]">
+        <div className="relative mx-auto w-[min(100%,calc((100dvh-2.5rem)*4/3))] border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
+          <div className="relative aspect-[4/3] w-full overflow-hidden">
+            <img src={world.image} alt={world.alt} className="block h-full w-full object-cover pixel-art" loading="lazy" decoding="async" />
+
+            {FORGE_PROJECTS.map((item, index) => {
+              const active = index === pick;
+              const labelBelow = item.box.y < 20;
+              return (
+                <button
+                  key={item.object}
+                  type="button"
+                  onClick={() => setPick(index)}
+                  aria-label={`${item.object}: ${item.title}`}
+                  aria-pressed={active}
+                  className={`group absolute z-10 border-2 transition-[border-color,box-shadow,background-color] duration-150 focus-visible:outline-none ${
+                    active
+                      ? "border-[#f6d365] bg-[#f6d365]/15 shadow-[0_0_0_2px_rgba(0,0,0,0.6),0_0_18px_rgba(246,211,101,0.75)]"
+                      : "border-dashed border-[#f8f4d8]/40 hover:border-solid hover:border-[#f6d365] hover:bg-[#f6d365]/10 hover:shadow-[0_0_0_2px_rgba(0,0,0,0.6),0_0_18px_rgba(246,211,101,0.6)] focus-visible:border-solid focus-visible:border-[#f6d365] focus-visible:shadow-[0_0_18px_rgba(246,211,101,0.6)]"
+                  }`}
+                  style={{ left: `${item.box.x}%`, top: `${item.box.y}%`, width: `${item.box.w}%`, height: `${item.box.h}%` }}
+                >
+                  <span
+                    className={`pixel-heading pointer-events-none absolute left-1/2 hidden -translate-x-1/2 whitespace-nowrap border-2 border-[#f8f4d8] bg-[#07101f]/95 px-2 py-1 text-xs leading-none tracking-[0.1em] text-[#f6d365] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 md:block ${
+                      labelBelow ? "top-full mt-2" : "bottom-full mb-2"
+                    }`}
+                  >
+                    {item.title}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="relative z-20 md:absolute md:bottom-3 md:left-3 md:w-[min(34rem,42%)] roomy:bottom-6 roomy:left-6">
+            <div className="nes-panel border-t-4 border-[#f8f4d8] bg-[#07101f]/95 p-5 text-[#fff8d8] shadow-[0_-4px_0_#101828] md:border-4 md:p-4 md:shadow-[0_0_0_4px_#101828,0_16px_0_rgba(0,0,0,0.35)] roomy:p-6">
+              {project ? (
+                <div aria-live="polite">
+                  <p className="pixel-heading mb-1 text-xs tracking-[0.14em] text-[#8ca6d9]">
+                    {project.object} · {project.tag}
+                  </p>
+                  <h2 className="pixel-heading mb-2 text-xl leading-tight text-[#f6d365] roomy:mb-3 roomy:text-3xl">{project.title}</h2>
+                  <p className="mb-3 text-[13px] leading-5 text-[#f4e7bd] roomy:mb-5 roomy:text-base roomy:leading-7">{project.story}</p>
+                </div>
+              ) : (
+                <div aria-live="polite">
+                  <h2 className="pixel-heading mb-3 text-3xl leading-tight text-white md:text-4xl">{world.title}</h2>
+                  <p className="mb-5 text-sm leading-6 text-[#f4e7bd] md:text-base md:leading-7">{world.body}</p>
+                </div>
+              )}
+
+              <div className="flex flex-wrap items-center gap-3 border-t-2 border-[#f8f4d8]/30 pt-3 roomy:pt-4">
+                {pick > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setPick(pick - 1)}
+                    className="pixel-button inline-flex min-h-11 items-center justify-center border-2 border-[#8ec5ff] bg-[#102a56] px-4 py-3 text-xs font-bold tracking-[0.16em] text-[#dff1ff] transition-colors hover:bg-[#183d78] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8ec5ff]"
+                  >
+                    ◀ BACK
+                  </button>
+                ) : null}
+                {!isLast ? (
+                  <button
+                    type="button"
+                    onClick={() => setPick(pick + 1)}
+                    className="pixel-button inline-flex min-h-11 items-center justify-center border-2 border-[#f6d365] bg-[#3b250a] px-4 py-3 text-xs font-bold tracking-[0.16em] text-[#fff5bf] transition-colors hover:bg-[#5a390f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f6d365]"
+                  >
+                    {pick === -1 ? "BEGIN ▶" : "NEXT ▶"}
+                  </button>
+                ) : null}
+                <a
+                  href="#map"
+                  onClick={onBack}
+                  className="ml-auto text-xs tracking-[0.12em] text-[#8ca6d9] underline underline-offset-4 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f6d365]"
+                >
+                  RETURN TO VILLAGE
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function Home() {
   const [view, setView] = useState<ViewState>("start");
 
@@ -867,7 +959,9 @@ export default function Home() {
     <main className="min-h-[100dvh] overflow-hidden bg-[#050816] text-white">
       {view === "start" ? <StartScreen onStart={() => goTo("map")} /> : null}
       {view === "map" ? <MapHub onSelect={goTo} /> : null}
-      {activeWorld?.id === "journey" ? (
+      {activeWorld?.id === "quests" ? (
+        <ForgeScreen world={activeWorld} onBack={() => goTo("map")} />
+      ) : activeWorld?.id === "journey" ? (
         <JourneyScreen world={activeWorld} onBack={() => goTo("map")} onCastle={() => goTo("status")} />
       ) : activeWorld ? (
         <WorldScreen key={activeWorld.id} world={activeWorld} onBack={() => goTo("map")} />
