@@ -8,6 +8,7 @@ import { JOURNEY_STOPS, JOURNEY_SUMMIT } from "./data/journey";
 import { LIBRARY_BOOKS, SHELF_ORDER } from "./data/library";
 import villageGlows from "./data/village-glows.json";
 import villageSky from "./data/village-sky.json";
+import villageZelda from "./data/village-zelda.json";
 
 const CONTACT_EMAIL = "emailweaver@gmail.com";
 
@@ -332,6 +333,124 @@ function AmbientGlowLayer({ glow }: { glow: AmbientGlow }) {
   );
 }
 
+// Zelda, Jason's dog, wandering the front of the village. Her poses are cut
+// from a sprite sheet by scripts/build_village_zelda.py onto one shared
+// canvas, standing on its bottom edge, so a pose swap never makes her jump.
+// The walk is a script rather than a loop: she trots in from the left, sits by
+// the front fence, crosses the path to the other fence, lies down for a while,
+// then leaves on the right, and the village is empty for a bit before she
+// comes back. Positions are in painting pixels along the front grass.
+type ZeldaBeat =
+  | { pose: string; ms: number }
+  | { walk: [number, number]; ms: number };
+
+const FIELD_WIDTH_PX = 1448;
+const FIELD_HEIGHT_PX = 1086;
+const ZELDA_WALK_FRAME_MS = 140;
+const ZELDA_GROUND = 1068;
+const ZELDA_LEFT_FENCE = 330;
+const ZELDA_RIGHT_FENCE = 1150;
+// About seventy painting pixels a second: a stroll, not a run.
+const walkMs = (from: number, to: number) => Math.round((Math.abs(to - from) / 70) * 1000);
+
+const ZELDA_SCRIPT: ZeldaBeat[] = [
+  { pose: "", ms: 4000 },
+  { walk: [-120, ZELDA_LEFT_FENCE], ms: walkMs(-120, ZELDA_LEFT_FENCE) },
+  { pose: "stand", ms: 700 },
+  { pose: "face", ms: 1400 },
+  { pose: "sit-front", ms: 5000 },
+  { pose: "sit-tilt", ms: 1200 },
+  { pose: "sit-front", ms: 3000 },
+  { pose: "stand", ms: 600 },
+  { walk: [ZELDA_LEFT_FENCE, ZELDA_RIGHT_FENCE], ms: walkMs(ZELDA_LEFT_FENCE, ZELDA_RIGHT_FENCE) },
+  { pose: "look-back", ms: 1400 },
+  { pose: "wag-0", ms: 250 },
+  { pose: "wag-1", ms: 250 },
+  { pose: "wag-0", ms: 250 },
+  { pose: "wag-1", ms: 250 },
+  { pose: "lie", ms: 900 },
+  { pose: "lie-rest", ms: 7000 },
+  { pose: "lie", ms: 800 },
+  { pose: "stand", ms: 600 },
+  { walk: [ZELDA_RIGHT_FENCE, 1570], ms: walkMs(ZELDA_RIGHT_FENCE, 1570) },
+  { pose: "", ms: 20000 },
+];
+const ZELDA_SCRIPT_MS = ZELDA_SCRIPT.reduce((total, beat) => total + beat.ms, 0);
+const ZELDA_POSES = villageZelda.poses;
+
+// Where she is and what she is doing `elapsed` ms into the script. A standing
+// beat keeps the spot the last walk ended on. The walk is stepped to whole art
+// pixels so she stays on the painting's grid instead of sliding between them.
+function zeldaAt(elapsed: number): { pose: string; x: number } {
+  let t = elapsed % ZELDA_SCRIPT_MS;
+  let x = -120;
+  for (const beat of ZELDA_SCRIPT) {
+    if ("walk" in beat) {
+      const [from, to] = beat.walk;
+      if (t < beat.ms) {
+        const step = (villageZelda.step / 100) * FIELD_WIDTH_PX;
+        const raw = from + ((to - from) * t) / beat.ms;
+        const frame = Math.floor(t / ZELDA_WALK_FRAME_MS) % 4;
+        return { pose: `walk-${frame}`, x: Math.round(raw / step) * step };
+      }
+      x = to;
+    } else if (t < beat.ms) {
+      return { pose: beat.pose, x };
+    }
+    t -= beat.ms;
+  }
+  return { pose: "", x };
+}
+
+function ZeldaLayer() {
+  const reducedMotion = usePrefersReducedMotion();
+  const [state, setState] = useState({ pose: "", x: -120 });
+
+  useEffect(() => {
+    if (reducedMotion) return;
+    const start = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const next = zeldaAt(now - start);
+      // Only re-render when she actually changes, not on every display frame.
+      setState((current) => (current.pose === next.pose && current.x === next.x ? current : next));
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [reducedMotion]);
+
+  // With motion off she just sits by the front fence.
+  const { pose, x } = reducedMotion ? { pose: "sit-front", x: ZELDA_LEFT_FENCE } : state;
+
+  // Every pose is stacked and switched by opacity, like the other loops, so
+  // the first pass through the walk never blinks while a frame decodes.
+  return (
+    <div
+      className="pointer-events-none absolute"
+      style={{
+        width: villageZelda.width,
+        height: villageZelda.height,
+        left: `${(x / FIELD_WIDTH_PX) * 100}%`,
+        top: `${(ZELDA_GROUND / FIELD_HEIGHT_PX) * 100}%`,
+        transform: "translate(-50%, -100%)",
+      }}
+      aria-hidden="true"
+    >
+      {ZELDA_POSES.map((name) => (
+        <img
+          key={name}
+          src={`/images/nes/village-scene/zelda-${name}.webp`}
+          alt=""
+          className="absolute inset-0 h-full w-full pixel-art"
+          style={{ opacity: pose === name ? 1 : 0 }}
+          decoding="async"
+        />
+      ))}
+    </div>
+  );
+}
+
 function PixelLink({
   href,
   children,
@@ -603,6 +722,9 @@ function MapHub({ onSelect }: { onSelect: (screen: ScreenId) => void }) {
             {VILLAGE_GLOWS.map((glow) => (
               <AmbientGlowLayer key={glow.name} glow={glow} />
             ))}
+
+            {/* Zelda, out on the front grass, in front of both fences. */}
+            <ZeldaLayer />
 
             {MAP_HOTSPOTS.map((spot) => {
               // Centred tooltips under buildings near the map's edge get clipped

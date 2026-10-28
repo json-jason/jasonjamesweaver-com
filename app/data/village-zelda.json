@@ -1,0 +1,21 @@
+{
+  "poses": [
+    "walk-0",
+    "walk-1",
+    "walk-2",
+    "walk-3",
+    "stand",
+    "look-back",
+    "face",
+    "sit",
+    "sit-front",
+    "sit-tilt",
+    "lie",
+    "lie-rest",
+    "wag-0",
+    "wag-1"
+  ],
+  "width": "12.4309%",
+  "height": "11.0497%",
+  "step": 0.2072
+}
