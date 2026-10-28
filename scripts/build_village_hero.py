@@ -26,7 +26,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from sprite_sheet import cut, posterize
+from sprite_sheet import cape_safe_ground, cut, posterize
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "public/images/nes/village-scene/source"
@@ -91,7 +91,7 @@ def main() -> None:
     for sheet_name, boxes in SHEETS.items():
         sheet = np.asarray(Image.open(SOURCE / sheet_name).convert("RGB"))
         for name, box in boxes.items():
-            poses[name] = cut(sheet, box, BLOCK)
+            poses[name] = cut(sheet, box, BLOCK, cape_safe_ground)
 
     centres = {name: tunic_centre(pose) for name, pose in poses.items()}
     reach = max(max(c, pose.shape[1] - c) for c, pose in zip(centres.values(), poses.values()))

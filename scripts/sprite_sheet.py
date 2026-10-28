@@ -32,6 +32,20 @@ def loose_ground(r: np.ndarray, g: np.ndarray, b: np.ndarray) -> np.ndarray:
     return (np.minimum(r, b) - g) >= 60
 
 
+def cape_safe_ground(r: np.ndarray, g: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """The ground and the fringe it leaves, without eating a purple cape.
+
+    `tight_ground` alone keeps the fringe - outline pixels half blended into
+    the magenta, which showed as a purple halo round the hero's head and
+    body. Both the fringe and the cape are purple, but the cape has a little
+    green in it and the fringe has next to none, since neither magenta nor
+    the black outline does. So a reddish-blue pixel with almost no green is
+    ground, and the cape survives."""
+    red_blue = np.minimum(r, b)
+    fringe = (red_blue > 60) & (g < 0.12 * red_blue)
+    return tight_ground(r, g, b) | fringe
+
+
 def _components(alpha: np.ndarray) -> list[list[tuple[int, int]]]:
     seen = np.zeros(alpha.shape, bool)
     found = []

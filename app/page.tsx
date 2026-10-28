@@ -360,6 +360,8 @@ type Walker = {
   name: "hero" | "zelda";
   sprites: { poses: string[]; width: string; height: string };
   ground: number;
+  // The frames of one walking step cycle, in order, and how long each shows.
+  walkCycle: string[];
   walkFrameMs: number;
   beats: Beat[];
   // Where they wait when motion is turned off.
@@ -384,10 +386,12 @@ const repeat = (poses: [string, string], frameMs: number, times: number): Beat[]
 // Zelda strolls at seventy painting pixels a second; Jason a little slower.
 const ZELDA_SPEED = 70;
 const HERO_SPEED = 60;
-// Zelda sits just right of Jason's spot by the fence, close enough that his
-// hand reaches her head when he kneels.
+// Zelda sits just right of Jason's spot by the fence. To pet her he steps up
+// close first: kneeling, his hand reaches 85 painting pixels in front of him,
+// which puts it on her chest.
 const HERO_BY_FENCE = 330;
 const ZELDA_BY_FENCE = 470;
+const HERO_KNEELING = ZELDA_BY_FENCE - 85;
 const HERO_ON_PATH = 760;
 const OFF_RIGHT = 1620;
 
@@ -399,9 +403,10 @@ const HERO_BEATS: Beat[] = [
   ...repeat(["wave-0", "wave-1"], 350, 3),
   hold("front", 600),
   hold("stand", 300),
+  walk(HERO_BY_FENCE, HERO_KNEELING, HERO_SPEED),
   hold("kneel", 3200),
   hold("stand", 400),
-  walk(HERO_BY_FENCE, HERO_ON_PATH, HERO_SPEED),
+  walk(HERO_KNEELING, HERO_ON_PATH, HERO_SPEED),
   hold("look", 900),
   hold("draw-0", 300),
   hold("draw-1", 300),
@@ -428,13 +433,13 @@ const ZELDA_BEATS: Beat[] = [
   walk(-120, ZELDA_BY_FENCE, ZELDA_SPEED),
   hold("stand", 500),
   hold("face", 900),
-  // Waits by the fence while Jason arrives and waves.
-  hold("sit-front", 3500),
+  // Waits by the fence while Jason arrives, waves and steps over to her.
+  hold("sit-front", 4450),
   // Being petted.
   hold("sit-tilt", 3200),
   hold("stand", 300),
   ...repeat(["wag-0", "wag-1"], 250, 4),
-  hold("sit-front", 8000),
+  hold("sit-front", 7050),
   // Not impressed by the sword.
   hold("lie", 800),
   hold("lie-rest", 9000),
@@ -448,23 +453,29 @@ const beatsMs = (beats: Beat[]) => beats.reduce((total, beat) => total + beat.ms
 // in the village before it starts again.
 const SCENE_MS = Math.max(beatsMs(HERO_BEATS), beatsMs(ZELDA_BEATS)) + 15000;
 
+// Jason is drawn after Zelda, so when he kneels his hand lies over her rather
+// than vanishing behind her. That is the only time the two overlap.
 const CAST: Walker[] = [
-  {
-    name: "hero",
-    sprites: villageHero,
-    ground: 1062,
-    walkFrameMs: 170,
-    beats: HERO_BEATS,
-    rest: { pose: "front", x: HERO_BY_FENCE },
-  },
-  // Zelda second, so she is drawn in front of him: she is nearer the viewer.
   {
     name: "zelda",
     sprites: villageZelda,
     ground: 1068,
+    walkCycle: ["walk-0", "walk-1", "walk-2", "walk-3"],
     walkFrameMs: 140,
     beats: ZELDA_BEATS,
     rest: { pose: "sit-front", x: ZELDA_BY_FENCE },
+  },
+  {
+    name: "hero",
+    sprites: villageHero,
+    ground: 1062,
+    // His four walk frames all have the same foot forward, so played in a row
+    // they read as a shuffle. Putting the standing pose between them gives
+    // stride, feet together, stride: a step, until a proper cycle is drawn.
+    walkCycle: ["walk-1", "stand", "walk-3", "stand"],
+    walkFrameMs: 190,
+    beats: HERO_BEATS,
+    rest: { pose: "front", x: HERO_BY_FENCE },
   },
 ];
 
@@ -481,8 +492,8 @@ function placementAt(walker: Walker, elapsed: number): Placement {
       const [from, to] = beat.walk;
       if (t < beat.ms) {
         const raw = from + ((to - from) * t) / beat.ms;
-        const frame = Math.floor(t / walker.walkFrameMs) % 4;
-        return { pose: `walk-${frame}`, x: Math.round(raw / ART_PIXEL) * ART_PIXEL };
+        const frame = Math.floor(t / walker.walkFrameMs) % walker.walkCycle.length;
+        return { pose: walker.walkCycle[frame], x: Math.round(raw / ART_PIXEL) * ART_PIXEL };
       }
       x = to;
     } else if (t < beat.ms) {
