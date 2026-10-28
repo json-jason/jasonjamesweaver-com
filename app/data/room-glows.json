@@ -1,0 +1,164 @@
+{
+  "library": [
+    {
+      "name": "library-desk-candle",
+      "frames": 6,
+      "frameMs": 140,
+      "box": {
+        "left": "82.3204%",
+        "top": "52.6703%",
+        "width": "4.5580%",
+        "height": "8.2873%"
+      }
+    },
+    {
+      "name": "library-candelabra",
+      "frames": 6,
+      "frameMs": 165,
+      "box": {
+        "left": "41.1602%",
+        "top": "48.4346%",
+        "width": "7.1823%",
+        "height": "6.9982%"
+      }
+    }
+  ],
+  "contact": [
+    {
+      "name": "contact-bed-candle",
+      "frames": 6,
+      "frameMs": 150,
+      "box": {
+        "left": "67.5414%",
+        "top": "18.2320%",
+        "width": "3.0387%",
+        "height": "4.9724%"
+      }
+    },
+    {
+      "name": "contact-shelf-lantern",
+      "frames": 6,
+      "frameMs": 135,
+      "box": {
+        "left": "31.0773%",
+        "top": "38.4899%",
+        "width": "4.0055%",
+        "height": "8.6556%"
+      }
+    },
+    {
+      "name": "contact-hanging-lantern",
+      "frames": 6,
+      "frameMs": 160,
+      "box": {
+        "left": "41.9890%",
+        "top": "45.8564%",
+        "width": "7.3204%",
+        "height": "9.5764%"
+      }
+    },
+    {
+      "name": "contact-wall-lantern",
+      "frames": 6,
+      "frameMs": 145,
+      "box": {
+        "left": "88.1215%",
+        "top": "43.5543%",
+        "width": "3.8674%",
+        "height": "8.1952%"
+      }
+    },
+    {
+      "name": "contact-hearth",
+      "frames": 6,
+      "frameMs": 110,
+      "box": {
+        "left": "91.0221%",
+        "top": "67.9558%",
+        "width": "7.1823%",
+        "height": "12.3389%"
+      }
+    }
+  ],
+  "quests": [
+    {
+      "name": "quests-lantern",
+      "frames": 6,
+      "frameMs": 140,
+      "box": {
+        "left": "7.4586%",
+        "top": "43.0939%",
+        "width": "5.1105%",
+        "height": "10.0368%"
+      }
+    },
+    {
+      "name": "quests-forge",
+      "frames": 6,
+      "frameMs": 105,
+      "box": {
+        "left": "75.1381%",
+        "top": "51.3812%",
+        "width": "15.4696%",
+        "height": "16.0221%"
+      }
+    }
+  ],
+  "status": [
+    {
+      "name": "status-torch-1",
+      "frames": 6,
+      "frameMs": 120,
+      "box": {
+        "left": "0.0000%",
+        "top": "37.1087%",
+        "width": "3.2459%",
+        "height": "10.9576%"
+      }
+    },
+    {
+      "name": "status-torch-2",
+      "frames": 6,
+      "frameMs": 135,
+      "box": {
+        "left": "21.8232%",
+        "top": "38.4899%",
+        "width": "3.8674%",
+        "height": "9.1160%"
+      }
+    },
+    {
+      "name": "status-torch-3",
+      "frames": 6,
+      "frameMs": 115,
+      "box": {
+        "left": "47.6519%",
+        "top": "41.2523%",
+        "width": "3.4530%",
+        "height": "8.6556%"
+      }
+    },
+    {
+      "name": "status-torch-4",
+      "frames": 6,
+      "frameMs": 130,
+      "box": {
+        "left": "77.2099%",
+        "top": "40.3315%",
+        "width": "3.7293%",
+        "height": "9.5764%"
+      }
+    },
+    {
+      "name": "status-torch-5",
+      "frames": 6,
+      "frameMs": 125,
+      "box": {
+        "left": "95.1657%",
+        "top": "38.4899%",
+        "width": "4.8343%",
+        "height": "11.4180%"
+      }
+    }
+  ]
+}

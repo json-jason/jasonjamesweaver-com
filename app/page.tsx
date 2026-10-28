@@ -6,6 +6,7 @@ import { CASTLE_ROOMS } from "./data/castle";
 import { FORGE_PROJECTS, type ForgeProject } from "./data/forge";
 import { JOURNEY_STOPS, JOURNEY_SUMMIT } from "./data/journey";
 import { LIBRARY_BOOKS, SHELF_ORDER } from "./data/library";
+import roomGlows from "./data/room-glows.json";
 import villageGlows from "./data/village-glows.json";
 import villageSky from "./data/village-sky.json";
 import villageZelda from "./data/village-zelda.json";
@@ -274,6 +275,11 @@ const VILLAGE_CLOUDS = villageSky.clouds as DriftingCloud[];
 const VILLAGE_FOREGROUND = "/images/nes/village-scene/foreground.webp";
 const VILLAGE_SMOKE = villageSky.smoke as AmbientGlow[];
 
+// The candles, lanterns, fires and torches inside each room, built by
+// scripts/build_room_glows.py the same way as the village lights. Keyed by
+// screen id.
+const ROOM_GLOWS = roomGlows as Record<string, AmbientGlow[]>;
+
 function DriftingCloudLayer({ cloud }: { cloud: DriftingCloud }) {
   // Two copies, one painting-width apart, inside a box that slides exactly one
   // painting width per cycle: as the leading copy leaves on the right its twin
@@ -296,11 +302,11 @@ function DriftingCloudLayer({ cloud }: { cloud: DriftingCloud }) {
   );
 }
 
-function glowFrameSrc(name: string, index: number) {
-  return `/images/nes/village-scene/${name}-${index}.webp`;
+function glowFrameSrc(folder: string, name: string, index: number) {
+  return `/images/nes/${folder}/${name}-${index}.webp`;
 }
 
-function AmbientGlowLayer({ glow }: { glow: AmbientGlow }) {
+function AmbientGlowLayer({ glow, folder = "village-scene" }: { glow: AmbientGlow; folder?: string }) {
   const [frame, setFrame] = useState(0);
   const reducedMotion = usePrefersReducedMotion();
 
@@ -322,7 +328,7 @@ function AmbientGlowLayer({ glow }: { glow: AmbientGlow }) {
       {Array.from({ length: glow.frames }, (_, index) => (
         <img
           key={index}
-          src={glowFrameSrc(glow.name, index)}
+          src={glowFrameSrc(folder, glow.name, index)}
           alt=""
           className="absolute inset-0 h-full w-full pixel-art"
           style={{ opacity: (reducedMotion ? 0 : frame) === index ? 1 : 0 }}
@@ -776,6 +782,9 @@ function WorldScreen({ world, onBack }: { world: World; onBack: () => void }) {
         <div className="relative mx-auto w-[min(100%,calc((100dvh-2.5rem)*4/3))] border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
           <div className="relative aspect-[4/3] w-full overflow-hidden">
             <img src={world.image} alt={world.alt} className="block h-full w-full object-cover pixel-art" loading="lazy" decoding="async" />
+            {(ROOM_GLOWS[world.id] ?? []).map((glow) => (
+              <AmbientGlowLayer key={glow.name} glow={glow} folder="room-scene" />
+            ))}
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_35%,rgba(3,4,10,0.72)_100%)] md:bg-[radial-gradient(circle_at_78%_78%,rgba(3,4,10,0.76),transparent_44%),linear-gradient(180deg,transparent_45%,rgba(3,4,10,0.45)_100%)]" />
           </div>
 
@@ -985,6 +994,9 @@ function ObjectRoom({
         <div className="relative mx-auto w-[min(100%,calc((100dvh-2.5rem)*4/3))] border-4 border-[#f8f4d8] bg-black shadow-[0_0_0_4px_#101828,0_24px_0_rgba(0,0,0,0.45)]">
           <div className="relative aspect-[4/3] w-full overflow-hidden">
             <img src={world.image} alt={world.alt} className="block h-full w-full object-cover pixel-art" loading="lazy" decoding="async" />
+            {(ROOM_GLOWS[world.id] ?? []).map((glow) => (
+              <AmbientGlowLayer key={glow.name} glow={glow} folder="room-scene" />
+            ))}
 
             {items.map((item, index) => {
               const active = index === pick;
