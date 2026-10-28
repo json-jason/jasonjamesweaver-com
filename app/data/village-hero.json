@@ -1,0 +1,30 @@
+{
+  "poses": [
+    "walk-0",
+    "walk-1",
+    "walk-2",
+    "walk-3",
+    "stand",
+    "front",
+    "look",
+    "wave-0",
+    "wave-1",
+    "kneel",
+    "idle-0",
+    "idle-1",
+    "draw-0",
+    "draw-1",
+    "draw-2",
+    "point",
+    "point-glint",
+    "hold",
+    "raise-0",
+    "raise-1",
+    "plant",
+    "sheathe-0",
+    "sheathe-1"
+  ],
+  "width": "26.9337%",
+  "height": "24.0331%",
+  "step": 0.2072
+}

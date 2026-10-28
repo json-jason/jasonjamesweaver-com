@@ -30,6 +30,8 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
+from sprite_sheet import cut, loose_ground, shared_palette, snap
+
 ROOT = Path(__file__).resolve().parents[1]
 SHEET = ROOT / "public/images/nes/village-scene/source/zelda-sheet.webp"
 OUT = ROOT / "public/images/nes/village-scene"
@@ -47,11 +49,6 @@ SCALE = 0.5
 GRID = 3
 BLOCK = round(GRID / SCALE)
 PALETTE_COLOURS = 24
-
-# How far a pixel has to lean towards magenta to count as background. The
-# sheet is lossy, so the ground is not one exact colour, and the outline
-# pixels it was blended into come out purple; both are dropped here.
-MAGENTA_LEAN = 60
 
 # The poses, in the order they sit on the sheet, as (x, y, width, height).
 # Measured once by finding the gaps between them; the sheet does not change.
@@ -73,52 +70,19 @@ POSES = {
 }
 
 
-def cut(sheet: np.ndarray, box: tuple[int, int, int, int]) -> np.ndarray:
-    """Key one pose off the magenta and reduce it to art pixels (RGBA)."""
-    x, y, w, h = box
-    pad = BLOCK
-    crop = sheet[y - pad : y + h + pad, x - pad : x + w + pad].astype(int)
-    r, g, b = crop[..., 0], crop[..., 1], crop[..., 2]
-    solid = (np.minimum(r, b) - g) < MAGENTA_LEAN
-
-    rows = crop.shape[0] // BLOCK
-    cols = crop.shape[1] // BLOCK
-    out = np.zeros((rows, cols, 4), np.uint8)
-    for j in range(rows):
-        for i in range(cols):
-            cell = (slice(j * BLOCK, (j + 1) * BLOCK), slice(i * BLOCK, (i + 1) * BLOCK))
-            mask = solid[cell]
-            # Half the block has to be dog for the art pixel to be dog. The
-            # median of only those pixels keeps the outline dark instead of
-            # averaging it into the fur.
-            if mask.mean() < 0.5:
-                continue
-            out[j, i, :3] = np.median(crop[cell][mask], axis=0)
-            out[j, i, 3] = 255
-    ys, xs = np.nonzero(out[..., 3])
-    return out[ys.min() : ys.max() + 1, xs.min() : xs.max() + 1]
-
-
 def main() -> None:
     sheet = np.asarray(Image.open(SHEET).convert("RGB"))
-    poses = {name: cut(sheet, box) for name, box in POSES.items()}
-
-    # One palette for every pose, built from all of their opaque pixels.
-    solid = np.concatenate([p[p[..., 3] > 0][:, :3] for p in poses.values()])
-    strip = Image.fromarray(solid.reshape(1, -1, 3))
-    palette = strip.quantize(PALETTE_COLOURS, method=Image.Quantize.MEDIANCUT)
+    poses = {name: cut(sheet, box, BLOCK, loose_ground) for name, box in POSES.items()}
+    palette = shared_palette(poses, PALETTE_COLOURS)
 
     canvas_w = max(p.shape[1] for p in poses.values())
     canvas_h = max(p.shape[0] for p in poses.values())
 
     for name, pose in poses.items():
-        rgb = Image.fromarray(np.ascontiguousarray(pose[..., :3]))
-        snapped = np.asarray(rgb.quantize(palette=palette, dither=Image.Dither.NONE).convert("RGB"))
         art = np.zeros((canvas_h, canvas_w, 4), np.uint8)
         top = canvas_h - pose.shape[0]
         left = (canvas_w - pose.shape[1]) // 2
-        art[top:, left : left + pose.shape[1], :3] = snapped
-        art[top:, left : left + pose.shape[1], 3] = pose[..., 3]
+        art[top:, left : left + pose.shape[1]] = snap(pose, palette)
         # Up to painting pixels, so the file lines up with every other patch.
         image = Image.fromarray(art).resize((canvas_w * GRID, canvas_h * GRID), Image.NEAREST)
         image.save(OUT / f"zelda-{name}.webp", lossless=True)
