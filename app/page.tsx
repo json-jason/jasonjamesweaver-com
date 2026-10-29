@@ -387,11 +387,11 @@ const repeat = (poses: [string, string], frameMs: number, times: number): Beat[]
 const ZELDA_SPEED = 70;
 const HERO_SPEED = 60;
 // Zelda sits just right of Jason's spot by the fence. To pet her he steps up
-// close first: kneeling, his hand reaches 85 painting pixels in front of him,
-// which puts it on her chest.
+// close first: kneeling, his hand reaches 92 painting pixels in front of him,
+// so 73 short of her puts it well onto her chest.
 const HERO_BY_FENCE = 330;
 const ZELDA_BY_FENCE = 470;
-const HERO_KNEELING = ZELDA_BY_FENCE - 85;
+const HERO_KNEELING = ZELDA_BY_FENCE - 73;
 const HERO_ON_PATH = 760;
 const OFF_RIGHT = 1620;
 
@@ -434,7 +434,7 @@ const ZELDA_BEATS: Beat[] = [
   hold("stand", 500),
   hold("face", 900),
   // Waits by the fence while Jason arrives, waves and steps over to her.
-  hold("sit-front", 4450),
+  hold("sit-front", 4650),
   // Being petted.
   hold("sit-tilt", 3200),
   hold("stand", 300),
@@ -469,10 +469,10 @@ const CAST: Walker[] = [
     name: "hero",
     sprites: villageHero,
     ground: 1062,
-    // His four walk frames all have the same foot forward, so played in a row
-    // they read as a shuffle. Putting the standing pose between them gives
-    // stride, feet together, stride: a step, until a proper cycle is drawn.
-    walkCycle: ["walk-1", "stand", "walk-3", "stand"],
+    // His sheet's walk frames all have the same foot forward, so on their own
+    // they shuffle. Each stride is followed by a passing frame built from it,
+    // with the feet drawn together under him: stride, pass, stride, pass.
+    walkCycle: ["walk-1", "pass-1", "walk-3", "pass-3"],
     walkFrameMs: 190,
     beats: HERO_BEATS,
     rest: { pose: "front", x: HERO_BY_FENCE },

@@ -80,10 +80,59 @@ SHEETS = {
 
 def tunic_centre(pose: np.ndarray) -> int:
     """The column through the middle of his blue tunic."""
+    return int(round(np.nonzero(is_tunic(pose))[1].mean()))
+
+
+def is_tunic(pose: np.ndarray) -> np.ndarray:
     rgb = pose[..., :3].astype(int)
     r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
-    blue = (pose[..., 3] > 0) & (b > 140) & (b - r > 90) & (b - g > 40)
-    return int(round(np.nonzero(blue)[1].mean()))
+    return (pose[..., 3] > 0) & (b > 140) & (b - r > 90) & (b - g > 40)
+
+
+def neutral_outline(pose: np.ndarray) -> np.ndarray:
+    """His outline without the purple tint.
+
+    Where the black outline met the magenta ground the two blended, so the
+    outline came out a very dark purple - too dark for the ground test to
+    take, but enough to show as a purple rim against the grass. Any dark,
+    purple-leaning pixel on his edge is turned to a plain dark of the same
+    weight."""
+    solid = pose[..., 3] > 0
+    padded = np.pad(solid, 1)
+    inner = padded[:-2, 1:-1] & padded[2:, 1:-1] & padded[1:-1, :-2] & padded[1:-1, 2:]
+    rgb = pose[..., :3].astype(int)
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    tinted = solid & ~inner & (np.maximum(r, b) <= 120) & (np.minimum(r, b) - g >= 16)
+    out = pose.copy()
+    dark = (np.minimum(r, b) // 2).astype(np.uint8)
+    for channel in range(3):
+        out[..., channel][tinted] = dark[tinted]
+    return out
+
+
+def passing(pose: np.ndarray) -> np.ndarray:
+    """The moment in a step between two strides, made from a stride frame.
+
+    His sheet's walk frames all have the same foot forward, so on their own
+    they only shuffle. Below the hem of his tunic the stride is drawn in
+    towards his feet - more the lower it goes, so the boots come together
+    under him while the hips stay put - and the legs are one art pixel
+    longer, which lifts him a little as a passing step does. Played between
+    two strides it reads as legs swinging through."""
+    hem = int(np.nonzero(is_tunic(pose).any(1))[0].max()) + 1
+    legs = pose[hem:]
+    rows = legs.shape[0]
+    feet = np.nonzero(legs[-6:, :, 3].any(0))[0]
+    centre = (feet.min() + feet.max()) / 2
+    out_legs = np.zeros((rows + 1,) + legs.shape[1:], np.uint8)
+    xs = np.arange(legs.shape[1])
+    for k in range(rows + 1):
+        source_row = min(rows - 1, k * rows // (rows + 1))
+        squeeze = 1 - 0.45 * k / rows
+        source_x = np.round(centre + (xs - centre) / squeeze).astype(int)
+        inside = (source_x >= 0) & (source_x < legs.shape[1])
+        out_legs[k, inside] = legs[source_row, source_x[inside]]
+    return np.concatenate([pose[:hem], out_legs])
 
 
 def main() -> None:
@@ -91,7 +140,9 @@ def main() -> None:
     for sheet_name, boxes in SHEETS.items():
         sheet = np.asarray(Image.open(SOURCE / sheet_name).convert("RGB"))
         for name, box in boxes.items():
-            poses[name] = cut(sheet, box, BLOCK, cape_safe_ground)
+            poses[name] = neutral_outline(cut(sheet, box, BLOCK, cape_safe_ground))
+    poses["pass-1"] = passing(poses["walk-1"])
+    poses["pass-3"] = passing(poses["walk-3"])
 
     centres = {name: tunic_centre(pose) for name, pose in poses.items()}
     reach = max(max(c, pose.shape[1] - c) for c, pose in zip(centres.values(), poses.values()))
