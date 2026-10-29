@@ -370,9 +370,9 @@ type Walker = {
 
 const FIELD_WIDTH_PX = 1448;
 const FIELD_HEIGHT_PX = 1086;
-// One art pixel. Walks are stepped by this much so the characters stay on the
-// painting's grid instead of sliding between pixels.
-const ART_PIXEL = 3;
+// Walks are stepped by whole painting pixels, so the characters never land
+// between two and blur.
+const ART_PIXEL = 1;
 
 const walk = (from: number, to: number, pxPerSecond: number): Beat => ({
   walk: [from, to],

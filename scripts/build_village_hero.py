@@ -26,7 +26,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from sprite_sheet import _components, cut, green_ground, posterize
+from sprite_sheet import cut, green_ground
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "public/images/nes/village-scene/source"
@@ -36,19 +36,14 @@ MANIFEST = ROOT / "app/data/village-hero.json"
 FIELD_W = 1448
 FIELD_H = 1086
 
-# Painting pixels per art pixel, the same as Zelda's, so the two read as one
-# set. Five sheet pixels to an art pixel puts him a little under twice the
+# Painting pixels per sheet pixel. It puts him a little under twice the
 # height of the fence posts, with Zelda's back about level with his belt.
-GRID = 3
-BLOCK = 5
-# Colours are rounded to this step so a frame never flickers between two
-# near-identical shades of the same cloth.
-COLOUR_STEP = 16
+SCALE = 0.6
 
 # The poses on each sheet as (x, y, width, height), measured once by finding
 # the separate figures on it; the sheets do not change. All three are drawn
 # on a green screen. The walk sheet was drawn on its own and bigger, so it is
-# shrunk first by the share given with it, to make him the same height
+# shrunk further by the share given with it, to make him the same height
 # striding as standing.
 WALK_SHEET_SCALE = 312 / 516
 SHEETS = {
@@ -104,17 +99,6 @@ def is_tunic(pose: np.ndarray) -> np.ndarray:
     return (pose[..., 3] > 0) & (b > 140) & (b - r > 90) & (b - g > 40)
 
 
-def drop_specks(pose: np.ndarray) -> np.ndarray:
-    """Without loose single art pixels - flecks of the screen's grain that
-    came through the key. Bigger loose pieces, like a sword's sparkle, stay."""
-    out = pose.copy()
-    for cells in _components(pose[..., 3] > 0):
-        if len(cells) < 3:
-            ys, xs = zip(*cells)
-            out[ys, xs] = 0
-    return out
-
-
 def neutral_outline(pose: np.ndarray) -> np.ndarray:
     """His outline without a green tint.
 
@@ -138,14 +122,9 @@ def neutral_outline(pose: np.ndarray) -> np.ndarray:
 def main() -> None:
     poses = {}
     for sheet_name, (scale, boxes) in SHEETS.items():
-        image = Image.open(SOURCE / sheet_name).convert("RGB")
-        if scale != 1:
-            size = (round(image.width * scale), round(image.height * scale))
-            image = image.resize(size, Image.Resampling.BOX)
-        sheet = np.asarray(image)
+        sheet = np.asarray(Image.open(SOURCE / sheet_name).convert("RGB"))
         for name, box in boxes.items():
-            scaled = tuple(round(v * scale) for v in box)
-            poses[name] = drop_specks(neutral_outline(cut(sheet, scaled, BLOCK, green_ground)))
+            poses[name] = neutral_outline(cut(sheet, box, SCALE * scale, green_ground))
 
     centres = {name: tunic_centre(pose) for name, pose in poses.items()}
     reach = max(max(c, pose.shape[1] - c) for c, pose in zip(centres.values(), poses.values()))
@@ -156,18 +135,16 @@ def main() -> None:
         art = np.zeros((canvas_h, canvas_w, 4), np.uint8)
         top = canvas_h - pose.shape[0]
         left = reach - centres[name]
-        art[top:, left : left + pose.shape[1]] = posterize(pose, COLOUR_STEP)
-        image = Image.fromarray(art).resize((canvas_w * GRID, canvas_h * GRID), Image.NEAREST)
-        image.save(OUT / f"hero-{name}.webp", lossless=True)
+        art[top:, left : left + pose.shape[1]] = pose
+        Image.fromarray(art).save(OUT / f"hero-{name}.webp", lossless=True)
 
     manifest = {
         "poses": list(poses),
-        "width": f"{canvas_w * GRID / FIELD_W * 100:.4f}%",
-        "height": f"{canvas_h * GRID / FIELD_H * 100:.4f}%",
-        "step": round(GRID / FIELD_W * 100, 4),
+        "width": f"{canvas_w / FIELD_W * 100:.4f}%",
+        "height": f"{canvas_h / FIELD_H * 100:.4f}%",
     }
     MANIFEST.write_text(json.dumps(manifest, indent=2) + "\n")
-    print(f"{len(poses)} poses, canvas {canvas_w * GRID}x{canvas_h * GRID} painting px")
+    print(f"{len(poses)} poses, canvas {canvas_w}x{canvas_h} painting px")
 
 
 if __name__ == "__main__":

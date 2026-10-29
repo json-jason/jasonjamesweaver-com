@@ -2,10 +2,8 @@
 
 The sheets come out of an image model as poses on a flat magenta or green
 ground, drawn bigger than they stand in the village and on a finer pixel
-grid than the painting. Each pose is keyed off the ground, reduced to art
-pixels of `block` sheet pixels each, and later scaled back up by the
-painting's grid so it reads as part of the picture rather than a sticker
-laid over it.
+grid than the painting. Each pose is keyed off the ground and shrunk to
+painting size.
 """
 
 from __future__ import annotations
@@ -58,74 +56,42 @@ def _components(alpha: np.ndarray) -> list[list[tuple[int, int]]]:
     return found
 
 
-def cut(sheet: np.ndarray, box: tuple[int, int, int, int], block: int, ground=tight_ground) -> np.ndarray:
-    """Key one pose off the magenta and reduce it to art pixels (RGBA)."""
-    x, y, w, h = box
-    crop = sheet[y - block : y + h + block, x - block : x + w + block].astype(int)
-    r, g, b = crop[..., 0], crop[..., 1], crop[..., 2]
-    solid = ~ground(r, g, b)
+def cut(sheet: np.ndarray, box: tuple[int, int, int, int], scale: float, ground=tight_ground) -> np.ndarray:
+    """Key one pose off the ground and shrink it by `scale` (RGBA).
 
-    rows = crop.shape[0] // block
-    cols = crop.shape[1] // block
-    out = np.zeros((rows, cols, 4), np.uint8)
-    for j in range(rows):
-        for i in range(cols):
-            cell = (slice(j * block, (j + 1) * block), slice(i * block, (i + 1) * block))
-            mask = solid[cell]
-            # Half the block has to be figure for the art pixel to be figure.
-            # The median of only those pixels keeps the outline dark instead
-            # of averaging it into whatever it borders.
-            if mask.mean() < 0.5:
-                continue
-            out[j, i, :3] = np.median(crop[cell][mask], axis=0)
-            out[j, i, 3] = 255
+    The sheets are not true pixel art: the image model draws fine detail at
+    two or three sheet pixels, with no fixed grid to snap to. Squeezing a
+    pose onto coarse blocks smeared his face, so it is shrunk smoothly
+    instead and keeps the detail as drawn. Only figure pixels are averaged,
+    so no ground colour bleeds into the edge, and a shrunk pixel is figure
+    if at least half of what it covers was."""
+    x, y, w, h = box
+    pad = 8
+    crop = sheet[y - pad : y + h + pad, x - pad : x + w + pad].astype(float)
+    solid = (~ground(crop[..., 0], crop[..., 1], crop[..., 2])).astype(float)
+    size = (round(crop.shape[1] * scale), round(crop.shape[0] * scale))
+
+    def shrink(channel: np.ndarray) -> np.ndarray:
+        image = Image.fromarray(channel.astype(np.float32), mode="F")
+        return np.asarray(image.resize(size, Image.Resampling.BOX))
+
+    cover = shrink(solid)
+    out = np.zeros((size[1], size[0], 4), np.uint8)
+    for channel in range(3):
+        out[..., channel] = np.clip(shrink(crop[..., channel] * solid) / np.maximum(cover, 1e-3), 0, 255)
+    out[..., 3] = (cover >= 0.5) * 255
+    rows, cols = out.shape[:2]
 
     # Poses on a crowded sheet reach into each other's boxes - a raised sword
     # pokes up past the boots of the row above. Keep the pose itself (the
     # biggest piece) and any loose bit wholly inside the box, like a sparkle,
-    # and drop pieces cut off by the box edge, which belong to a neighbour.
+    # and drop pieces cut off by the box edge, which belong to a neighbour,
+    # and single-pixel flecks of the ground's grain that came through the key.
     pieces = sorted(_components(out[..., 3] > 0), key=len, reverse=True)
     for cells in pieces[1:]:
         ys, xs = zip(*cells)
-        if min(ys) == 0 or min(xs) == 0 or max(ys) == rows - 1 or max(xs) == cols - 1:
+        if len(cells) < 3 or min(ys) == 0 or min(xs) == 0 or max(ys) == rows - 1 or max(xs) == cols - 1:
             out[ys, xs] = 0
 
     ys, xs = np.nonzero(out[..., 3])
     return out[ys.min() : ys.max() + 1, xs.min() : xs.max() + 1]
-
-
-def shared_palette(poses: dict[str, np.ndarray], colours: int) -> Image.Image:
-    """One palette for every pose, so the same patch of cloth is the same
-    colour in every frame. Without it a walking step can flicker between two
-    shades. It spends its colours where the pixels are, so it suits a figure
-    with no small details in a colour of their own; see `posterize`."""
-    solid = np.concatenate([p[p[..., 3] > 0][:, :3] for p in poses.values()])
-    strip = Image.fromarray(solid.reshape(1, -1, 3))
-    return strip.quantize(colours, method=Image.Quantize.MEDIANCUT)
-
-
-def snap(pose: np.ndarray, palette: Image.Image) -> np.ndarray:
-    """The pose's colours moved onto the shared palette, alpha untouched.
-
-    Each pixel takes the nearest palette colour. Pillow's own quantize with a
-    fixed palette was tried first and sent the sword's grey steel to pink, so
-    the matching is done here instead."""
-    colours = np.array(palette.getpalette()[: len(palette.getcolors()) * 3]).reshape(-1, 3)
-    rgb = pose[..., :3].reshape(-1, 1, 3).astype(int)
-    nearest = ((rgb - colours[None]) ** 2).sum(2).argmin(1)
-    out = pose.copy()
-    out[..., :3] = colours[nearest].reshape(pose.shape[:2] + (3,))
-    return out
-
-
-def posterize(pose: np.ndarray, step: int) -> np.ndarray:
-    """Every channel rounded to a multiple of `step`, alpha untouched.
-
-    The other way to keep frames from flickering. A palette fitted to the
-    pixels outvotes thin details - the hero's sword blade is a sliver of him,
-    and its steel came out the cream of his trousers - while fixed steps
-    treat every colour alike, and the same colour still always lands on the
-    same step."""
-    out = pose.copy()
-    out[..., :3] = np.clip(np.round(pose[..., :3] / step) * step, 0, 255).astype(np.uint8)
-    return out
