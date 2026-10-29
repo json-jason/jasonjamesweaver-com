@@ -388,10 +388,10 @@ const ZELDA_SPEED = 70;
 const HERO_SPEED = 60;
 // Zelda sits just right of Jason's spot by the fence. To pet her he steps up
 // close first: kneeling, his hand reaches 92 painting pixels in front of him,
-// so 73 short of her puts it well onto her chest.
+// so 84 short of her puts it just behind her ear, on her neck.
 const HERO_BY_FENCE = 330;
 const ZELDA_BY_FENCE = 470;
-const HERO_KNEELING = ZELDA_BY_FENCE - 73;
+const HERO_KNEELING = ZELDA_BY_FENCE - 84;
 const HERO_ON_PATH = 760;
 const OFF_RIGHT = 1620;
 
@@ -434,7 +434,7 @@ const ZELDA_BEATS: Beat[] = [
   hold("stand", 500),
   hold("face", 900),
   // Waits by the fence while Jason arrives, waves and steps over to her.
-  hold("sit-front", 4650),
+  hold("sit-front", 4466),
   // Being petted.
   hold("sit-tilt", 3200),
   hold("stand", 300),
@@ -453,9 +453,20 @@ const beatsMs = (beats: Beat[]) => beats.reduce((total, beat) => total + beat.ms
 // in the village before it starts again.
 const SCENE_MS = Math.max(beatsMs(HERO_BEATS), beatsMs(ZELDA_BEATS)) + 15000;
 
-// Jason is drawn after Zelda, so when he kneels his hand lies over her rather
-// than vanishing behind her. That is the only time the two overlap.
+// Zelda is drawn after Jason. She stands a little lower on the grass, so
+// nearer the viewer, and when he kneels his hand goes behind her head onto
+// her neck and back instead of in front of her face.
 const CAST: Walker[] = [
+  {
+    name: "hero",
+    sprites: villageHero,
+    ground: 1062,
+    // Right foot forward, passing, left foot forward, passing.
+    walkCycle: ["walk-0", "walk-1", "walk-2", "walk-3"],
+    walkFrameMs: 180,
+    beats: HERO_BEATS,
+    rest: { pose: "front", x: HERO_BY_FENCE },
+  },
   {
     name: "zelda",
     sprites: villageZelda,
@@ -464,18 +475,6 @@ const CAST: Walker[] = [
     walkFrameMs: 140,
     beats: ZELDA_BEATS,
     rest: { pose: "sit-front", x: ZELDA_BY_FENCE },
-  },
-  {
-    name: "hero",
-    sprites: villageHero,
-    ground: 1062,
-    // His sheet's walk frames all have the same foot forward, so on their own
-    // they shuffle. Each stride is followed by a passing frame built from it,
-    // with the feet drawn together under him: stride, pass, stride, pass.
-    walkCycle: ["walk-1", "pass-1", "walk-3", "pass-3"],
-    walkFrameMs: 190,
-    beats: HERO_BEATS,
-    rest: { pose: "front", x: HERO_BY_FENCE },
   },
 ];
 

@@ -1,10 +1,11 @@
-"""Shared helpers for cutting characters out of magenta sprite sheets.
+"""Shared helpers for cutting characters out of sprite sheets.
 
-The sheets come out of an image model as poses on a flat magenta ground,
-drawn bigger than they stand in the village and on a finer pixel grid than
-the painting. Each pose is keyed off the magenta, reduced to art pixels of
-`block` sheet pixels each, and later scaled back up by the painting's grid so
-it reads as part of the picture rather than a sticker laid over it.
+The sheets come out of an image model as poses on a flat magenta or green
+ground, drawn bigger than they stand in the village and on a finer pixel
+grid than the painting. Each pose is keyed off the ground, reduced to art
+pixels of `block` sheet pixels each, and later scaled back up by the
+painting's grid so it reads as part of the picture rather than a sticker
+laid over it.
 """
 
 from __future__ import annotations
@@ -15,9 +16,7 @@ import numpy as np
 from PIL import Image
 
 # What counts as the magenta ground. The sheets are lossy, so it is not one
-# exact colour, and it bleeds a little into the outline it touches. The test
-# has to stay tight: the hero's cape is purple, and its light folds are only
-# about sixty steps of red and blue away from the ground.
+# exact colour, and it bleeds a little into the outline it touches.
 BACKGROUND_MIN_RED_BLUE = 215
 BACKGROUND_MAX_GREEN = 30
 
@@ -32,18 +31,12 @@ def loose_ground(r: np.ndarray, g: np.ndarray, b: np.ndarray) -> np.ndarray:
     return (np.minimum(r, b) - g) >= 60
 
 
-def cape_safe_ground(r: np.ndarray, g: np.ndarray, b: np.ndarray) -> np.ndarray:
-    """The ground and the fringe it leaves, without eating a purple cape.
-
-    `tight_ground` alone keeps the fringe - outline pixels half blended into
-    the magenta, which showed as a purple halo round the hero's head and
-    body. Both the fringe and the cape are purple, but the cape has a little
-    green in it and the fringe has next to none, since neither magenta nor
-    the black outline does. So a reddish-blue pixel with almost no green is
-    ground, and the cape survives."""
-    red_blue = np.minimum(r, b)
-    fringe = (red_blue > 60) & (g < 0.12 * red_blue)
-    return tight_ground(r, g, b) | fringe
+def green_ground(r: np.ndarray, g: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """Anything leaning well towards green, for sheets drawn on a green
+    screen. The hero has no green on him - his gold is more red than green -
+    so this takes the ground and the green fringe where it met his outline,
+    and leaves his purple cape whole, which no magenta test could."""
+    return (g - np.maximum(r, b)) >= 50
 
 
 def _components(alpha: np.ndarray) -> list[list[tuple[int, int]]]:
