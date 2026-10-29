@@ -422,8 +422,8 @@ const HERO_BEATS: Beat[] = [
   hold("draw-2", 300),
   hold("sheathe-0", 400),
   hold("sheathe-1", 400),
+  // He waved hello by the fence; here he just turns and goes.
   hold("front", 500),
-  ...repeat(["wave-0", "wave-1"], 350, 2),
   hold("stand", 300),
   walk(HERO_ON_PATH, OFF_RIGHT, HERO_SPEED),
 ];
