@@ -58,9 +58,14 @@ export const FORGE_PROJECTS: ForgeProject[] = [
   {
     object: "THE CHEST",
     title: "The code chest",
-    tag: "GitHub · coming soon",
+    tag: "GitHub · unlocked",
     story:
-      "Locked for now. I am getting this website's code ready to share, so anyone can see how the village was built. Check back soon.",
+      "Unlocked! This website's code is open on GitHub, so anyone can see how the village was built, from the pixel art to every flicker of firelight.",
     box: { x: 27.6, y: 15, w: 6, h: 6.9 },
+    link: {
+      href: "https://github.com/json-jason/jasonjamesweaver-com",
+      label: "OPEN THE CODE ON GITHUB ▶",
+      shortLabel: "VIEW THE CODE ▶",
+    },
   },
 ];
