@@ -56,6 +56,18 @@ export const FORGE_PROJECTS: ForgeProject[] = [
     box: { x: 44.9, y: 17, w: 11.4, h: 19.8 },
   },
   {
+    object: "THE LANTERN",
+    title: "US 395 road report",
+    tag: "Built with Claude",
+    story:
+      "I drive US 395 from Los Angeles to Reno often, and I was tired of weather, road closures and road conditions spread across many websites. So I built one clear view of the main road: a go or wait answer, storm timing, and every stop from Cajon Pass to Reno. Tap a stop only when you need its cameras and details.",
+    box: { x: 7.3, y: 36.5, w: 5.2, h: 17.5 },
+    link: {
+      href: "https://395road.eicp.io",
+      label: "CHECK THE ROAD ▶",
+    },
+  },
+  {
     object: "THE CHEST",
     title: "The code chest",
     tag: "GitHub · unlocked",
